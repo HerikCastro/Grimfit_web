@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="100%" height="100%" fill="#0b0b0c" />
+  <g transform="translate(20,30)">
+    <rect x="60" y="40" width="280" height="180" rx="12" fill="#111" stroke="#8a2be2" stroke-width="3" />
+    <text x="90" y="150" fill="#bbb" font-size="18">Camiseta Oversize</text>
+  </g>
+</svg>

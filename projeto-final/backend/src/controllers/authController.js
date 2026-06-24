@@ -41,6 +41,7 @@ exports.register = async (req, res) => {
     );
 
     return res.status(201).json({
+      ok: true,
       message: "Usuário criado"
     });
 
@@ -99,7 +100,15 @@ exports.login = async (req, res) => {
     );
 
     return res.json({
-      token
+      ok: true,
+      token,
+      user: {
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        telefone: user.telefone,
+        tipo: user.tipo
+      }
     });
 
   } catch (error) {
