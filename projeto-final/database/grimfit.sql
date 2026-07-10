@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS grimfit;
-CREATE DATABASE grimfit;
-USE grimfit;
+drop database if exists railway;
+CREATE DATABASE railway;
+USE railway;
 
 CREATE TABLE usuarios (
 id INT AUTO_INCREMENT PRIMARY KEY,
