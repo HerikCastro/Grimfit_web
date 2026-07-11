@@ -8,7 +8,7 @@ const pool = require("./src/config/db");
 
 async function migrar() {
   const sql = fs.readFileSync(
-    path.join(__dirname, "grimfit_postgres.sql"),
+    path.join(__dirname, "..", "grimfit-database", "grimfit_postgres.sql"),
     "utf8"
   );
 
