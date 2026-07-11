@@ -11,9 +11,9 @@ exports.register = async (req, res) => {
       telefone
     } = req.body;
 
-    const [usuario] =
+    const { rows: usuario } =
       await pool.query(
-        "SELECT id FROM usuarios WHERE email = ?",
+        "SELECT id FROM usuarios WHERE email = $1",
         [email]
       );
 
@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
       `
       INSERT INTO usuarios
       (nome,email,senha,telefone)
-      VALUES (?,?,?,?)
+      VALUES ($1,$2,$3,$4)
       `,
       [
         nome,
@@ -62,9 +62,9 @@ exports.login = async (req, res) => {
       senha
     } = req.body;
 
-    const [usuarios] =
+    const { rows: usuarios } =
       await pool.query(
-        "SELECT * FROM usuarios WHERE email = ?",
+        "SELECT * FROM usuarios WHERE email = $1",
         [email]
       );
 

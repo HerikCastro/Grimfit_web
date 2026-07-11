@@ -1,23 +1,19 @@
 const pool = require("../config/db");
 
-exports.getUsers = async (req, res) => {
+exports.getTickets = async (req, res) => {
 
   try {
 
-    const [users] =
+    const { rows: tickets } =
       await pool.query(
         `
-        SELECT
-        id,
-        nome,
-        email,
-        telefone,
-        tipo
-        FROM usuarios
+        SELECT *
+        FROM tickets
+        ORDER BY created_at DESC
         `
       );
 
-    return res.json(users);
+    return res.json(tickets);
 
   } catch (error) {
 

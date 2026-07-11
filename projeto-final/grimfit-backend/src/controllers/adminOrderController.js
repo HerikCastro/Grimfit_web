@@ -4,7 +4,7 @@ exports.getOrders = async (req, res) => {
 
   try {
 
-    const [orders] =
+    const { rows: orders } =
       await pool.query(
         `
         SELECT *
@@ -34,8 +34,8 @@ exports.updateStatus = async (req, res) => {
     await pool.query(
       `
       UPDATE pedidos
-      SET status = ?
-      WHERE id = ?
+      SET status = $1
+      WHERE id = $2
       `,
       [
         req.body.status,

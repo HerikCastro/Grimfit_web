@@ -3,7 +3,7 @@ const pool = require("../config/db");
 exports.getCategories = async (req, res) => {
   try {
 
-    const [categorias] =
+    const { rows: categorias } =
       await pool.query(
         "SELECT * FROM categorias"
       );
@@ -29,7 +29,7 @@ exports.createCategory = async (req, res) => {
     await pool.query(
       `
       INSERT INTO categorias(nome)
-      VALUES(?)
+      VALUES($1)
       `,
       [nome]
     );
@@ -55,7 +55,7 @@ exports.deleteCategory = async (req, res) => {
     await pool.query(
       `
       DELETE FROM categorias
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.params.id]
     );

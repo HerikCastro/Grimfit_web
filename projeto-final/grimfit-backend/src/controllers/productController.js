@@ -4,7 +4,7 @@ exports.getProducts = async (req, res) => {
 
   try {
 
-    const [produtos] =
+    const { rows: produtos } =
       await pool.query(
         "SELECT * FROM produtos WHERE ativo = TRUE"
       );
@@ -27,12 +27,12 @@ exports.getProductById = async (req, res) => {
 
   try {
 
-    const [produto] =
+    const { rows: produto } =
       await pool.query(
         `
         SELECT *
         FROM produtos
-        WHERE id = ?
+        WHERE id = $1
         `,
         [req.params.id]
       );
@@ -81,7 +81,7 @@ exports.createProduct = async (req, res) => {
         categoria_id,
         marca_id
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6)
       `,
       [
         nome,
@@ -116,7 +116,7 @@ exports.deleteProduct = async (req, res) => {
     await pool.query(
       `
       DELETE FROM produtos
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.params.id]
     );
@@ -151,10 +151,10 @@ exports.updateProduct = async (req, res) => {
       `
       UPDATE produtos
       SET
-        nome = ?,
-        descricao = ?,
-        preco = ?
-      WHERE id = ?
+        nome = $1,
+        descricao = $2,
+        preco = $3
+      WHERE id = $4
       `,
       [
         nome,

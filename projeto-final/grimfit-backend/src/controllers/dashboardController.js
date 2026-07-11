@@ -4,26 +4,26 @@ exports.dashboard = async (req, res) => {
 
   try {
 
-    const [[usuarios]] =
+    const { rows: [usuarios] } =
       await pool.query(
         "SELECT COUNT(*) total FROM usuarios"
       );
 
-    const [[produtos]] =
+    const { rows: [produtos] } =
       await pool.query(
         "SELECT COUNT(*) total FROM produtos"
       );
 
-    const [[pedidos]] =
+    const { rows: [pedidos] } =
       await pool.query(
         "SELECT COUNT(*) total FROM pedidos"
       );
 
-    const [[faturamento]] =
+    const { rows: [faturamento] } =
       await pool.query(
         `
         SELECT
-        IFNULL(SUM(valor_total),0)
+        COALESCE(SUM(valor_total),0)
         total
         FROM pedidos
         WHERE status != 'cancelado'

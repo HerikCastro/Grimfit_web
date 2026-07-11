@@ -3,7 +3,7 @@ const pool = require("../config/db");
 exports.getBrands = async (req, res) => {
   try {
 
-    const [marcas] =
+    const { rows: marcas } =
       await pool.query(
         "SELECT * FROM marcas"
       );
@@ -29,7 +29,7 @@ exports.createBrand = async (req, res) => {
     await pool.query(
       `
       INSERT INTO marcas(nome)
-      VALUES(?)
+      VALUES($1)
       `,
       [nome]
     );
@@ -55,7 +55,7 @@ exports.deleteBrand = async (req, res) => {
     await pool.query(
       `
       DELETE FROM marcas
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.params.id]
     );

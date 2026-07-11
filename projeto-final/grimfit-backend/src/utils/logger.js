@@ -2,27 +2,26 @@ const pool = require("../config/db");
 
 module.exports = async (
   usuario_id,
-  titulo,
-  mensagem
+  acao,
+  tabela
 ) => {
 
   try {
 
     await pool.query(
       `
-      INSERT INTO notificacoes
+      INSERT INTO logs_sistema
       (
         usuario_id,
-        titulo,
-        mensagem
+        acao,
+        tabela_afetada
       )
-      VALUES
-      (?, ?, ?)
+      VALUES ($1, $2, $3)
       `,
       [
         usuario_id,
-        titulo,
-        mensagem
+        acao,
+        tabela
       ]
     );
 

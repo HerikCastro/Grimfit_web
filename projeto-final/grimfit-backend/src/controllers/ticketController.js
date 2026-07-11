@@ -6,20 +6,21 @@ exports.createTicket = async (req, res) => {
 
     const { assunto } = req.body;
 
-    const [ticket] = await pool.query(`
+    const { rows: [ticket] } = await pool.query(`
       INSERT INTO tickets
       (
         usuario_id,
         assunto
       )
-      VALUES (?, ?)
+      VALUES ($1, $2)
+      RETURNING id
     `, [
       req.user.id,
       assunto
     ]);
 
     return res.status(201).json({
-      ticket_id: ticket.insertId
+      ticket_id: ticket.id
     });
 
   } catch (error) {
@@ -38,10 +39,10 @@ exports.getMyTickets = async (req, res) => {
 
   try {
 
-    const [tickets] = await pool.query(`
+    const { rows: tickets } = await pool.query(`
       SELECT *
       FROM tickets
-      WHERE usuario_id = ?
+      WHERE usuario_id = $1
     `, [req.user.id]);
 
     return res.json(tickets);

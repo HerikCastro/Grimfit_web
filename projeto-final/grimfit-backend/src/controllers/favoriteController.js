@@ -7,9 +7,10 @@ exports.addFavorite = async (req, res) => {
 
     await pool.query(
       `
-      INSERT IGNORE INTO favoritos
+      INSERT INTO favoritos
       (usuario_id, produto_id)
-      VALUES (?, ?)
+      VALUES ($1, $2)
+      ON CONFLICT (usuario_id, produto_id) DO NOTHING
       `,
       [
         req.user.id,
@@ -39,8 +40,8 @@ exports.removeFavorite = async (req, res) => {
     await pool.query(
       `
       DELETE FROM favoritos
-      WHERE usuario_id = ?
-      AND produto_id = ?
+      WHERE usuario_id = $1
+      AND produto_id = $2
       `,
       [
         req.user.id,
@@ -68,14 +69,14 @@ exports.getFavorites = async (req, res) => {
 
   try {
 
-    const [favoritos] =
+    const { rows: favoritos } =
       await pool.query(
         `
         SELECT p.*
         FROM favoritos f
         JOIN produtos p
         ON p.id = f.produto_id
-        WHERE f.usuario_id = ?
+        WHERE f.usuario_id = $1
         `,
         [req.user.id]
       );

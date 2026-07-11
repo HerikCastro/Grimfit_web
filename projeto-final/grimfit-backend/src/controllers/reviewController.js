@@ -18,7 +18,7 @@ exports.createReview = async (req, res) => {
         nota,
         comentario
       )
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
     `, [
       req.user.id,
       produto_id,
@@ -46,14 +46,14 @@ exports.getReviews = async (req, res) => {
 
   try {
 
-    const [reviews] = await pool.query(`
+    const { rows: reviews } = await pool.query(`
       SELECT
         a.*,
         u.nome
       FROM avaliacoes a
       JOIN usuarios u
       ON u.id = a.usuario_id
-      WHERE produto_id = ?
+      WHERE produto_id = $1
     `, [req.params.id]);
 
     return res.json(reviews);

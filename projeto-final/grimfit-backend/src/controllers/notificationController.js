@@ -4,11 +4,11 @@ exports.getNotifications = async (req, res) => {
 
   try {
 
-    const [rows] = await pool.query(
+    const { rows } = await pool.query(
       `
       SELECT *
       FROM notificacoes
-      WHERE usuario_id = ?
+      WHERE usuario_id = $1
       ORDER BY created_at DESC
       `,
       [req.user.id]

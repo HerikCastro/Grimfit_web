@@ -6,11 +6,11 @@ exports.validateCoupon = async (req, res) => {
 
     const { codigo } = req.body;
 
-    const [cupom] = await pool.query(
+    const { rows: cupom } = await pool.query(
       `
       SELECT *
       FROM cupons
-      WHERE codigo = ?
+      WHERE codigo = $1
       AND ativo = TRUE
       `,
       [codigo]

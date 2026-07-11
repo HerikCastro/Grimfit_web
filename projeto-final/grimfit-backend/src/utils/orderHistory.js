@@ -18,9 +18,9 @@ module.exports = async (
       )
       VALUES
       (
-        ?,
-        ?,
-        ?,
+        $1,
+        $2,
+        $3,
         NOW()
       )
       `,

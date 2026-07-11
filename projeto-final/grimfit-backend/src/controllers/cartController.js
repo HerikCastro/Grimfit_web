@@ -4,7 +4,7 @@ exports.getCart = async (req, res) => {
 
   try {
 
-    const [carrinho] =
+    const { rows: carrinho } =
       await pool.query(
         `
         SELECT
@@ -19,7 +19,7 @@ exports.getCart = async (req, res) => {
           ON vp.id = ic.variacao_id
         JOIN produtos p
           ON p.id = vp.produto_id
-        WHERE c.usuario_id = ?
+        WHERE c.usuario_id = $1
         `,
         [req.user.id]
       );
@@ -47,29 +47,30 @@ exports.addCartItem = async (req, res) => {
       quantidade
     } = req.body;
 
-    let [cart] =
+    let { rows: cart } =
       await pool.query(
         `
         SELECT *
         FROM carrinhos
-        WHERE usuario_id = ?
+        WHERE usuario_id = $1
         `,
         [req.user.id]
       );
 
     if (cart.length === 0) {
 
-      const [novo] =
+      const { rows: [novo] } =
         await pool.query(
           `
           INSERT INTO carrinhos(usuario_id)
-          VALUES(?)
+          VALUES($1)
+          RETURNING id
           `,
           [req.user.id]
         );
 
       cart = [{
-        id: novo.insertId
+        id: novo.id
       }];
     }
 
@@ -81,7 +82,7 @@ exports.addCartItem = async (req, res) => {
         variacao_id,
         quantidade
       )
-      VALUES (?, ?, ?)
+      VALUES ($1, $2, $3)
       `,
       [
         cart[0].id,
@@ -113,7 +114,7 @@ exports.removeCartItem = async (req, res) => {
     await pool.query(
       `
       DELETE FROM itens_carrinho
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.params.id]
     );

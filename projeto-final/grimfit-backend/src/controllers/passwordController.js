@@ -12,13 +12,9 @@ exports.forgotPassword = async (req, res) => {
       `
       UPDATE usuarios
       SET
-        reset_token = ?,
-        reset_token_expire =
-        DATE_ADD(
-          NOW(),
-          INTERVAL 1 HOUR
-        )
-      WHERE email = ?
+        reset_token = $1,
+        reset_token_expire = NOW() + INTERVAL '1 hour'
+      WHERE email = $2
       `,
       [
         token,

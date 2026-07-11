@@ -4,11 +4,11 @@ exports.getAddresses = async (req, res) => {
 
   try {
 
-    const [enderecos] = await pool.query(
+    const { rows: enderecos } = await pool.query(
       `
       SELECT *
       FROM enderecos
-      WHERE usuario_id = ?
+      WHERE usuario_id = $1
       `,
       [req.user.id]
     );
@@ -56,7 +56,7 @@ exports.createAddress = async (req, res) => {
         cidade,
         estado
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
       [
         req.user.id,
@@ -94,8 +94,8 @@ exports.deleteAddress = async (req, res) => {
     await pool.query(
       `
       DELETE FROM enderecos
-      WHERE id = ?
-      AND usuario_id = ?
+      WHERE id = $1
+      AND usuario_id = $2
       `,
       [
         req.params.id,

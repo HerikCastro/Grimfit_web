@@ -4,7 +4,7 @@ exports.profile = async (req, res) => {
 
   try {
 
-    const [usuario] =
+    const { rows: usuario } =
       await pool.query(
         `
         SELECT
@@ -14,7 +14,7 @@ exports.profile = async (req, res) => {
         telefone,
         tipo
         FROM usuarios
-        WHERE id = ?
+        WHERE id = $1
         `,
         [req.user.id]
       );
