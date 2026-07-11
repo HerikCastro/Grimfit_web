@@ -25,6 +25,7 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminTicketRoutes = require("./routes/adminTicketRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
+const migrar = require("../migrate");
 
 const app = express();
 
@@ -82,5 +83,19 @@ app.use(
     path.join(__dirname, "uploads")
   )
 );
+
+app.get("/rodar-migracao-9x7k2", async (req, res) => {
+  if (req.query.chave !== process.env.MIGRATION_KEY) {
+    return res.status(403).json({ message: "Não autorizado" });
+  }
+
+  try {
+    await migrar();
+    return res.json({ message: "Migração concluída" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Erro na migração", detalhe: error.message });
+  }
+});
 
 module.exports = app;
