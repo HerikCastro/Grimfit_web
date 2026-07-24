@@ -4,10 +4,10 @@ Sistema de e-commerce desenvolvido para fins acadêmicos utilizando **React**, *
 
 > 📚 **Projeto desenvolvido para fins acadêmicos.**
 >
-👨‍💻 Desenvolvedores
-
-- **Julie Costa Macedo Pereira** — Desenvolvimento Frontend
-- **Herik da Cruz Castro** — Desenvolvimento Backend
+>👨‍💻 Desenvolvedores
+>
+>- **Julie Costa Macedo Pereira** — Desenvolvimento Frontend
+>- **Herik da Cruz Castro** — Desenvolvimento Backend
 >
 > ⚠️ O código deste projeto é compartilhado com a versão **Desktop (Electron)**.
 > Alterações realizadas no `frontend/` ou no `backend/` devem ser sincronizadas entre os dois repositórios para manter ambos compatíveis.
