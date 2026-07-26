@@ -6,7 +6,8 @@ const auth = require("../middleware/auth");
 const staff = require("../middleware/staff");
 
 const {
-  getTickets
+  getTickets,
+  updateTicketStatus
 } = require("../controllers/adminTicketController");
 
 router.get(
@@ -14,6 +15,13 @@ router.get(
   auth,
   staff,
   getTickets
+);
+
+router.put(
+  "/:id/status",
+  auth,
+  staff,
+  updateTicketStatus
 );
 
 module.exports = router;

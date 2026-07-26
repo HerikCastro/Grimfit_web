@@ -10,8 +10,12 @@ exports.getCart = async (req, res) => {
         SELECT
           ic.id,
           ic.quantidade,
+          ic.variacao_id,
+          p.id AS produto_id,
           p.nome,
-          p.preco
+          p.preco,
+          vp.tamanho,
+          vp.cor
         FROM carrinhos c
         JOIN itens_carrinho ic
           ON ic.carrinho_id = c.id
@@ -47,6 +51,23 @@ exports.addCartItem = async (req, res) => {
       quantidade
     } = req.body;
 
+    if (!variacao_id || !quantidade || quantidade < 1) {
+      return res.status(400).json({
+        message: "variacao_id e quantidade (>=1) são obrigatórios"
+      });
+    }
+
+    const { rows: variacao } = await pool.query(
+      "SELECT id, estoque FROM variacoes_produto WHERE id = $1",
+      [variacao_id]
+    );
+
+    if (variacao.length === 0) {
+      return res.status(404).json({
+        message: "Variação de produto não encontrada"
+      });
+    }
+
     let { rows: cart } =
       await pool.query(
         `
@@ -72,6 +93,34 @@ exports.addCartItem = async (req, res) => {
       cart = [{
         id: novo.id
       }];
+    }
+
+    // Se o item (mesma variação) já está no carrinho, soma a quantidade
+    // em vez de criar uma linha duplicada.
+    const { rows: existente } = await pool.query(
+      `
+      SELECT id, quantidade
+      FROM itens_carrinho
+      WHERE carrinho_id = $1
+      AND variacao_id = $2
+      `,
+      [cart[0].id, variacao_id]
+    );
+
+    if (existente.length > 0) {
+
+      await pool.query(
+        `
+        UPDATE itens_carrinho
+        SET quantidade = quantidade + $1
+        WHERE id = $2
+        `,
+        [quantidade, existente[0].id]
+      );
+
+      return res.json({
+        message: "Quantidade atualizada no carrinho"
+      });
     }
 
     await pool.query(
@@ -107,9 +156,85 @@ exports.addCartItem = async (req, res) => {
 
 };
 
+exports.updateCartItem = async (req, res) => {
+
+  try {
+
+    const { quantidade } = req.body;
+
+    if (!quantidade || quantidade < 1) {
+      return res.status(400).json({
+        message: "quantidade precisa ser no mínimo 1"
+      });
+    }
+
+    // Confirma que o item pertence a um carrinho do usuário logado
+    // antes de deixar editar (evita alterar item de outra pessoa).
+    const { rows: item } = await pool.query(
+      `
+      SELECT ic.id
+      FROM itens_carrinho ic
+      JOIN carrinhos c ON c.id = ic.carrinho_id
+      WHERE ic.id = $1
+      AND c.usuario_id = $2
+      `,
+      [req.params.id, req.user.id]
+    );
+
+    if (item.length === 0) {
+      return res.status(404).json({
+        message: "Item não encontrado no seu carrinho"
+      });
+    }
+
+    await pool.query(
+      `
+      UPDATE itens_carrinho
+      SET quantidade = $1
+      WHERE id = $2
+      `,
+      [quantidade, req.params.id]
+    );
+
+    return res.json({
+      message: "Quantidade atualizada"
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
 exports.removeCartItem = async (req, res) => {
 
   try {
+
+    // Antes só deletava pelo id, sem checar dono — permitia
+    // qualquer usuário logado apagar item de carrinho alheio
+    // se soubesse (ou chutasse) o id certo.
+    const { rows: item } = await pool.query(
+      `
+      SELECT ic.id
+      FROM itens_carrinho ic
+      JOIN carrinhos c ON c.id = ic.carrinho_id
+      WHERE ic.id = $1
+      AND c.usuario_id = $2
+      `,
+      [req.params.id, req.user.id]
+    );
+
+    if (item.length === 0) {
+      return res.status(404).json({
+        message: "Item não encontrado no seu carrinho"
+      });
+    }
 
     await pool.query(
       `

@@ -9,6 +9,7 @@ const pool = require("./config/db");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+const variantRoutes = require("./routes/variantRoutes");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const brandRoutes = require("./routes/brandRoutes");
@@ -25,7 +26,6 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminTicketRoutes = require("./routes/adminTicketRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
-const migrar = require("../migrate");
 
 const app = express();
 
@@ -60,6 +60,7 @@ app.get("/db-test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/variants", variantRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/brands", brandRoutes);
@@ -83,19 +84,5 @@ app.use(
     path.join(__dirname, "uploads")
   )
 );
-
-app.get("/rodar-migracao-9x7k2", async (req, res) => {
-  if (req.query.chave !== process.env.MIGRATION_KEY) {
-    return res.status(403).json({ message: "Não autorizado" });
-  }
-
-  try {
-    await migrar();
-    return res.json({ message: "Migração concluída" });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Erro na migração", detalhe: error.message });
-  }
-});
 
 module.exports = app;

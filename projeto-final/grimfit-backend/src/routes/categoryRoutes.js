@@ -7,17 +7,28 @@ const admin = require("../middleware/admin");
 
 const {
   getCategories,
+  getCategoryById,
   createCategory,
+  updateCategory,
   deleteCategory
 } = require("../controllers/categoryController");
 
 router.get("/", getCategories);
+
+router.get("/:id", getCategoryById);
 
 router.post(
   "/",
   auth,
   admin,
   createCategory
+);
+
+router.put(
+  "/:id",
+  auth,
+  admin,
+  updateCategory
 );
 
 router.delete(

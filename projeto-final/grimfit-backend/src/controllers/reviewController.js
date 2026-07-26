@@ -10,6 +10,12 @@ exports.createReview = async (req, res) => {
       comentario
     } = req.body;
 
+    if (!produto_id || !nota || nota < 1 || nota > 5) {
+      return res.status(400).json({
+        message: "produto_id e nota (1 a 5) são obrigatórios"
+      });
+    }
+
     await pool.query(`
       INSERT INTO avaliacoes
       (
@@ -57,6 +63,92 @@ exports.getReviews = async (req, res) => {
     `, [req.params.id]);
 
     return res.json(reviews);
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
+exports.updateReview = async (req, res) => {
+
+  try {
+
+    const { nota, comentario } = req.body;
+
+    if (nota && (nota < 1 || nota > 5)) {
+      return res.status(400).json({
+        message: "nota precisa ser entre 1 e 5"
+      });
+    }
+
+    const { rowCount } = await pool.query(
+      `
+      UPDATE avaliacoes
+      SET
+        nota = COALESCE($1, nota),
+        comentario = COALESCE($2, comentario)
+      WHERE id = $3
+      AND usuario_id = $4
+      `,
+      [
+        nota,
+        comentario,
+        req.params.id,
+        req.user.id
+      ]
+    );
+
+    if (rowCount === 0) {
+      return res.status(404).json({
+        message: "Avaliação não encontrada"
+      });
+    }
+
+    return res.json({
+      message: "Avaliação atualizada"
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
+exports.deleteReview = async (req, res) => {
+
+  try {
+
+    const { rowCount } = await pool.query(
+      `
+      DELETE FROM avaliacoes
+      WHERE id = $1
+      AND usuario_id = $2
+      `,
+      [req.params.id, req.user.id]
+    );
+
+    if (rowCount === 0) {
+      return res.status(404).json({
+        message: "Avaliação não encontrada"
+      });
+    }
+
+    return res.json({
+      message: "Avaliação removida"
+    });
 
   } catch (error) {
 

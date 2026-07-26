@@ -7,12 +7,15 @@ const auth = require("../middleware/auth");
 const {
   createOrder,
   myOrders,
+  getOrderById,
   cancelOrder
 } = require("../controllers/orderController");
 
 router.post("/", auth, createOrder);
 
 router.get("/", auth, myOrders);
+
+router.get("/:id", auth, getOrderById);
 
 router.put("/:id/cancel", auth, cancelOrder);
 
