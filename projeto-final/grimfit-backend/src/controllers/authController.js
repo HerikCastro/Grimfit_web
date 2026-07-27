@@ -11,10 +11,23 @@ exports.register = async (req, res) => {
       telefone
     } = req.body;
 
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        message: "Email é obrigatório"
+      });
+    }
+
+    // Guarda sempre em minúsculo — evita "Joao@Gmail.com" e
+    // "joao@gmail.com" virarem duas contas diferentes, e evita
+    // login falhar por causa da caixa da letra.
+    const emailNormalizado = email.trim().toLowerCase();
+
+    // LOWER() nos dois lados também pega contas antigas que já
+    // foram salvas com maiúscula antes dessa correção existir.
     const { rows: usuario } =
       await pool.query(
-        "SELECT id FROM usuarios WHERE email = $1",
-        [email]
+        "SELECT id FROM usuarios WHERE LOWER(email) = $1",
+        [emailNormalizado]
       );
 
     if (usuario.length > 0) {
@@ -34,7 +47,7 @@ exports.register = async (req, res) => {
       `,
       [
         nome,
-        email,
+        emailNormalizado,
         hash,
         telefone
       ]
@@ -62,10 +75,18 @@ exports.login = async (req, res) => {
       senha
     } = req.body;
 
+    if (!email || !senha) {
+      return res.status(400).json({
+        message: "Email e senha são obrigatórios"
+      });
+    }
+
+    const emailNormalizado = email.trim().toLowerCase();
+
     const { rows: usuarios } =
       await pool.query(
-        "SELECT * FROM usuarios WHERE email = $1",
-        [email]
+        "SELECT * FROM usuarios WHERE LOWER(email) = $1",
+        [emailNormalizado]
       );
 
     if (usuarios.length === 0) {
