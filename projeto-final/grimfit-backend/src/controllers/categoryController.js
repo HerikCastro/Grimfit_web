@@ -92,7 +92,8 @@ exports.createCategory = async (req, res) => {
     console.log(error);
 
     return res.status(500).json({
-      message: "Erro interno"
+      message: "Erro interno",
+      detalhe: error.message
     });
 
   }
