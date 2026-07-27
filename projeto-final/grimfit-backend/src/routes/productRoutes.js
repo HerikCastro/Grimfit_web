@@ -4,6 +4,7 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+const upload = require("../uploads/multer");
 
 const {
   getProducts,
@@ -21,6 +22,7 @@ router.post(
   "/",
   auth,
   admin,
+  upload.single("imagem"),
   createProduct
 );
 
@@ -35,6 +37,7 @@ router.put(
   "/:id",
   auth,
   admin,
+  upload.single("imagem"),
   updateProduct
 );
 

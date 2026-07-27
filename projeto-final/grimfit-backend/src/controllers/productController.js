@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const uploadImage = require("../utils/uploadImage");
 
 const ORDENACOES = {
   recentes: "p.created_at DESC",
@@ -137,7 +138,6 @@ exports.createProduct = async (req, res) => {
       nome,
       descricao,
       preco,
-      imagem_url,
       categoria_id,
       marca_id
     } = req.body;
@@ -147,6 +147,14 @@ exports.createProduct = async (req, res) => {
         message: "nome e preco (> 0) são obrigatórios"
       });
     }
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Imagem é obrigatória"
+      });
+    }
+
+    const imagem_url = await uploadImage(req.file.buffer, "produtos");
 
     await pool.query(
       `
@@ -229,11 +237,17 @@ exports.updateProduct = async (req, res) => {
       nome,
       descricao,
       preco,
-      imagem_url,
       categoria_id,
       marca_id,
       ativo
     } = req.body;
+
+    // Imagem só troca se vier um arquivo novo no upload.
+    let imagem_url = null;
+
+    if (req.file) {
+      imagem_url = await uploadImage(req.file.buffer, "produtos");
+    }
 
     const { rowCount } = await pool.query(
       `

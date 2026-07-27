@@ -85,4 +85,26 @@ app.use(
   )
 );
 
+// Erros do multer (arquivo grande demais, tipo inválido) e outros
+// erros passados via next(err) caem aqui — sem isso, o Express
+// devolvia uma página de erro HTML em vez de JSON.
+app.use((err, req, res, next) => {
+
+  if (err && err.name === "MulterError") {
+    return res.status(400).json({
+      message: `Erro no upload: ${err.message}`
+    });
+  }
+
+  if (err) {
+    console.log(err);
+    return res.status(400).json({
+      message: err.message || "Erro na requisição"
+    });
+  }
+
+  next();
+
+});
+
 module.exports = app;

@@ -1,36 +1,33 @@
 const multer = require("multer");
-const path = require("path");
 
-const storage = multer.diskStorage({
+// Antes salvava em disco (src/uploads) — problema porque o disco
+// do Render é efêmero, some a cada deploy/restart. Agora guarda só
+// em memória (buffer), tempo suficiente pra mandar pro Cloudinary
+// e depois descartar.
+const storage = multer.memoryStorage();
 
-  destination(req, file, cb) {
+const TIPOS_AGEITOS = [
+  "image/jpeg",
+  "image/png",
+  "image/webp"
+];
 
-    cb(
-      null,
-      "src/uploads"
+function filtroDeArquivo(req, file, cb) {
+
+  if (!TIPOS_AGEITOS.includes(file.mimetype)) {
+    return cb(
+      new Error("Formato de imagem inválido (use JPG, PNG ou WEBP)")
     );
-
-  },
-
-  filename(req, file, cb) {
-
-    const unique =
-      Date.now() +
-      "-" +
-      Math.round(
-        Math.random() * 1E9
-      );
-
-    cb(
-      null,
-      unique +
-      path.extname(file.originalname)
-    );
-
   }
 
-});
+  cb(null, true);
+
+}
 
 module.exports = multer({
-  storage
+  storage,
+  fileFilter: filtroDeArquivo,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  }
 });

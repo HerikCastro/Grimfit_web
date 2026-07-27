@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const uploadImage = require("../utils/uploadImage");
 
 exports.getCategories = async (req, res) => {
   try {
@@ -60,12 +61,20 @@ exports.createCategory = async (req, res) => {
       });
     }
 
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Imagem é obrigatória"
+      });
+    }
+
+    const imagem_url = await uploadImage(req.file.buffer, "categorias");
+
     await pool.query(
       `
-      INSERT INTO categorias(nome)
-      VALUES($1)
+      INSERT INTO categorias(nome, imagem_url)
+      VALUES($1, $2)
       `,
-      [nome]
+      [nome, imagem_url]
     );
 
     return res.status(201).json({
@@ -100,13 +109,22 @@ exports.updateCategory = async (req, res) => {
       });
     }
 
+    // Imagem é opcional na edição — só troca se mandar um arquivo novo.
+    let imagem_url = null;
+
+    if (req.file) {
+      imagem_url = await uploadImage(req.file.buffer, "categorias");
+    }
+
     const { rowCount } = await pool.query(
       `
       UPDATE categorias
-      SET nome = $1
-      WHERE id = $2
+      SET
+        nome = $1,
+        imagem_url = COALESCE($2, imagem_url)
+      WHERE id = $3
       `,
-      [nome, req.params.id]
+      [nome, imagem_url, req.params.id]
     );
 
     if (rowCount === 0) {
@@ -153,8 +171,6 @@ exports.deleteCategory = async (req, res) => {
 
   } catch (error) {
 
-    // categoria com produto vinculado não pode ser apagada
-    // (FOREIGN KEY sem ON DELETE CASCADE em produtos.categoria_id)
     if (error.code === "23503") {
       return res.status(409).json({
         message: "Não é possível remover: existem produtos usando essa categoria"
