@@ -42,12 +42,14 @@ CREATE TABLE enderecos (
 
 CREATE TABLE categorias (
   id SERIAL PRIMARY KEY,
-  nome VARCHAR(100) UNIQUE NOT NULL
+  nome VARCHAR(100) UNIQUE NOT NULL,
+  imagem_url TEXT
 );
 
 CREATE TABLE marcas (
   id SERIAL PRIMARY KEY,
-  nome VARCHAR(100) UNIQUE NOT NULL
+  nome VARCHAR(100) UNIQUE NOT NULL,
+  imagem_url TEXT
 );
 
 CREATE TABLE produtos (

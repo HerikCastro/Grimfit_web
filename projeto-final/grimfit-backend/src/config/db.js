@@ -8,11 +8,28 @@ const pool = new Pool({
   }
 });
 
+const ensureImageColumns = async () => {
+  const statements = [
+    "ALTER TABLE categorias ADD COLUMN IF NOT EXISTS imagem_url TEXT",
+    "ALTER TABLE marcas ADD COLUMN IF NOT EXISTS imagem_url TEXT",
+    "ALTER TABLE produtos ADD COLUMN IF NOT EXISTS imagem_url TEXT"
+  ];
+
+  for (const statement of statements) {
+    try {
+      await pool.query(statement);
+    } catch (error) {
+      console.log("ERRO AO GARANTIR COLUNA DE IMAGEM:", error.message);
+    }
+  }
+};
+
 module.exports = pool;
 
 pool.connect()
-  .then((client) => {
+  .then(async (client) => {
     console.log("POSTGRES CONECTADO");
     client.release();
+    await ensureImageColumns();
   })
   .catch((err) => console.log("ERRO POSTGRES:", err.message));
