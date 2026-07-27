@@ -260,24 +260,6 @@ BEFORE UPDATE ON produtos
 FOR EACH ROW EXECUTE FUNCTION atualizar_updated_at();
 
 -- ============================================================
--- Dados iniciais (seed)
--- ============================================================
-
-INSERT INTO categorias (nome) VALUES
-('Camisetas'),
-('Calças'),
-('Moletons'),
-('Bermudas'),
-('Acessórios');
-
-INSERT INTO marcas (nome) VALUES
-('Grimfit');
-
-INSERT INTO cupons (codigo, desconto, ativo) VALUES
-('BEMVINDO10', 10, TRUE),
-('GRIMFIT15', 15, TRUE);
-
--- ============================================================
 -- GRIMFIT - Correções no schema Postgres
 -- Rode isso no banco que já existe (não recria nada, só ajusta)
 -- ============================================================
