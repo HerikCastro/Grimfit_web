@@ -6,6 +6,8 @@ const helmet = require("helmet");
 const path = require("path");
 
 const pool = require("./config/db");
+const waf = require("./middleware/waf");
+const { generalLimiter, authLimiter } = require("./middleware/rateLimiter");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -29,9 +31,20 @@ const passwordRoutes = require("./routes/passwordRoutes");
 
 const app = express();
 
+// O Render fica atrás de um proxy reverso — sem isso, req.ip sempre
+// mostraria o IP interno do proxy, não o IP real de quem acessa.
+// Isso quebraria o rate limit (todo mundo pareceria o "mesmo" IP).
+app.set("trust proxy", 1);
+
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
+
+// Rate limit geral pra tudo, e o WAF analisa o conteúdo de toda
+// requisição já com o body parseado (por isso vem depois do
+// express.json()).
+app.use(generalLimiter);
+app.use(waf);
 
 app.get("/", (req, res) => {
   res.json({
@@ -58,7 +71,11 @@ app.get("/db-test", async (req, res) => {
   }
 });
 
-app.use("/api/auth", authRoutes);
+// authLimiter é mais rígido que o geral — protege login/registro/
+// reset de senha contra tentativa de força bruta.
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/password", authLimiter, passwordRoutes);
+
 app.use("/api/products", productRoutes);
 app.use("/api/variants", variantRoutes);
 app.use("/api/users", userRoutes);
@@ -76,7 +93,6 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/tickets", adminTicketRoutes);
-app.use("/api/password", passwordRoutes);
 
 app.use(
   "/uploads",
