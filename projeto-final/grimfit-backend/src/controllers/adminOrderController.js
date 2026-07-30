@@ -80,27 +80,4 @@ exports.updateStatus = async (req, res) => {
 
   }
 
-};      SET status = $1
-      WHERE id = $2
-      `,
-      [
-        req.body.status,
-        req.params.id
-      ]
-    );
-
-    return res.json({
-      message: "Status atualizado"
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.status(500).json({
-      message: "Erro interno"
-    });
-
-  }
-
 };
