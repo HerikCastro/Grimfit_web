@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import LoadingScreen from './components/LoadingScreen'
@@ -20,11 +20,16 @@ import Register from './pages/Register'
 
 function AppContent() {
   const { ready } = useAuth()
+  const location = useLocation()
 
   if (!ready) return <LoadingScreen />
 
+  // Fundo com a marca aparece em todas as páginas, menos no carrinho
+  // (pedido do usuário — lá o fundo distrai da lista de itens).
+  const semFundoMarca = location.pathname === '/cart'
+
   return (
-    <div className="app-root">
+    <div className={`app-root ${semFundoMarca ? '' : 'fundo-marca'}`}>
       <Header />
       <main className="container">
         <Routes>
