@@ -1,79 +1,72 @@
-import React, { createContext, useContext, useEffect, useReducer } from 'react'
+import React, { createContext, useContext, useState, useCallback } from 'react'
+import { getCart, addCartItem, updateCartItem, removeCartItem } from '../api'
 
-const CartStateContext = createContext()
-const CartDispatchContext = createContext()
-
-const STORAGE_KEY = 'grimfit_cart_v1'
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'hydrate':
-      return action.payload || []
-    case 'add': {
-      const item = action.payload
-      const exist = state.find(i => i.id === item.id)
-      if (exist) {
-        return state.map(i => i.id === item.id ? { ...i, qty: i.qty + (item.qty||1) } : i)
-      }
-      return [...state, { ...item, qty: item.qty || 1 }]
-    }
-    case 'remove':
-      return state.filter(i => i.id !== action.payload)
-    case 'updateQty': {
-      const { id, qty } = action.payload
-      if (qty <= 0) return state.filter(i => i.id !== id)
-      return state.map(i => i.id === id ? { ...i, qty } : i)
-    }
-    case 'clear':
-      return []
-    default:
-      return state
-  }
-}
+const CartContext = createContext()
 
 export function CartProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, [])
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  // Busca o carrinho de verdade no backend. Só funciona com o
+  // usuário logado (a rota /api/cart exige token) — por isso só
+  // deve ser chamado depois do login confirmar.
+  const refreshCart = useCallback(async () => {
+    setLoading(true)
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) dispatch({ type: 'hydrate', payload: JSON.parse(raw) })
-    } catch (e) { /* ignore */ }
+      const data = await getCart()
+      setItems(Array.isArray(data) ? data : [])
+    } catch (e) {
+      // Sem login ainda, ou erro de rede — carrinho fica vazio,
+      // não quebra a tela.
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch (e) { /* ignore */ }
-  }, [state])
+  const addItem = useCallback(async (variacaoId, quantidade = 1) => {
+    await addCartItem(variacaoId, quantidade)
+    await refreshCart()
+  }, [refreshCart])
+
+  const updateItem = useCallback(async (itemId, quantidade) => {
+    await updateCartItem(itemId, quantidade)
+    await refreshCart()
+  }, [refreshCart])
+
+  const removeItem = useCallback(async (itemId) => {
+    await removeCartItem(itemId)
+    await refreshCart()
+  }, [refreshCart])
+
+  const clearLocal = useCallback(() => setItems([]), [])
+
+  const total = items.reduce((soma, item) => {
+    const preco = parseFloat(item.preco) || 0
+    return soma + preco * item.quantidade
+  }, 0)
+
+  const count = items.reduce((soma, item) => soma + item.quantidade, 0)
 
   return (
-    <CartDispatchContext.Provider value={dispatch}>
-      <CartStateContext.Provider value={state}>
-        {children}
-      </CartStateContext.Provider>
-    </CartDispatchContext.Provider>
+    <CartContext.Provider value={{
+      items,
+      loading,
+      total,
+      count,
+      refreshCart,
+      addItem,
+      updateItem,
+      removeItem,
+      clearLocal
+    }}>
+      {children}
+    </CartContext.Provider>
   )
 }
 
 export function useCart() {
-  const state = useContext(CartStateContext)
-  if (state === undefined) throw new Error('useCart must be used within CartProvider')
-  return state
-}
-
-export function useCartActions() {
-  const dispatch = useContext(CartDispatchContext)
-  if (dispatch === undefined) throw new Error('useCartActions must be used within CartProvider')
-  return {
-    addToCart: item => dispatch({ type: 'add', payload: item }),
-    removeFromCart: id => dispatch({ type: 'remove', payload: id }),
-    updateQty: (id, qty) => dispatch({ type: 'updateQty', payload: { id, qty } }),
-    clearCart: () => dispatch({ type: 'clear' }),
-    hydrateCart: (cart) => dispatch({ type: 'hydrate', payload: cart })
-  }
-}
-
-export function cartTotal(state) {
-  return state.reduce((s, i) => s + (parseFloat(String(i.price).replace(',','.')) || 0) * i.qty, 0)
+  const ctx = useContext(CartContext)
+  if (!ctx) throw new Error('useCart deve ser usado dentro de CartProvider')
+  return ctx
 }

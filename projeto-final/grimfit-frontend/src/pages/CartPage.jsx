@@ -1,49 +1,67 @@
-import React from 'react'
-import { useCart, useCartActions, cartTotal } from '../context/CartContext'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import Img from '../components/Img'
 
-export default function CartPage(){
-  const items = useCart()
-  const { removeFromCart, updateQty, clearCart } = useCartActions()
-  const total = cartTotal(items)
+export default function CartPage() {
+  const { items, total, loading, refreshCart, updateItem, removeItem } = useCart()
+  const { user } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user) refreshCart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  if (!user) {
+    return (
+      <div className="cart-page">
+        <h1>Seu Carrinho</h1>
+        <p>Você precisa <a href="/login">entrar</a> pra ver o carrinho.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="cart-page">
       <h1>Seu Carrinho</h1>
-      <div className="cart-list">
-        {items.length===0 && <div>Nenhum item no carrinho</div>}
-        {items.map(i=> {
-          return (
-          <div key={i.id} className="cart-item" style={{display:'flex',gap:12,alignItems:'center',padding:12,background:'var(--panel)',borderRadius:8,marginBottom:8}}>
-            <div style={{width:80,height:80,overflow:'hidden',borderRadius:6}}>
-              <Img src={i.image} alt={i.name} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',opacity:0}} onLoad={e=>{ e.currentTarget.style.opacity='1' }} />
-            </div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:700}}>{i.name}</div>
-              <div style={{color:'var(--muted)'}}>Tamanho: {i.size} • Cor: {i.color}</div>
-              <div style={{color:'var(--accent)'}}>R$ {i.price}</div>
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:8,alignItems:'flex-end'}}>
-              <div>
-                <button onClick={()=>updateQty(i.id, i.qty-1)}>-</button>
-                <span style={{margin:'0 8px'}}>{i.qty}</span>
-                <button onClick={()=>updateQty(i.id, i.qty+1)}>+</button>
+
+      {loading ? (
+        <div>Carregando...</div>
+      ) : items.length === 0 ? (
+        <div>Nenhum item no carrinho ainda.</div>
+      ) : (
+        <div className="cart-list">
+          {items.map(item => (
+            <div key={item.id} className="cart-item">
+              <div className="cart-item-imagem">
+                <Img src={item.imagem_url} alt={item.nome} />
               </div>
-              <button onClick={()=>removeFromCart(i.id)} style={{color:'#ff6b6b',background:'transparent',border:0,cursor:'pointer'}}>Remover</button>
+              <div className="cart-item-info">
+                <div className="cart-item-nome">{item.nome}</div>
+                <div className="muted">Tamanho: {item.tamanho || '-'} • Cor: {item.cor || '-'}</div>
+                <div className="cart-item-preco">R$ {item.preco}</div>
+              </div>
+              <div className="cart-item-acoes">
+                <div className="quantidade-controle">
+                  <button onClick={() => updateItem(item.id, item.quantidade - 1)} disabled={item.quantidade <= 1}>-</button>
+                  <span>{item.quantidade}</span>
+                  <button onClick={() => updateItem(item.id, item.quantidade + 1)}>+</button>
+                </div>
+                <button className="remover" onClick={() => removeItem(item.id)}>Remover</button>
+              </div>
             </div>
-          </div>
-          )
-        })}
-      </div>
-      <div className="cart-summary" style={{marginTop:12}}>
-        <div style={{fontWeight:700}}>Total: R$ {total.toFixed(2).replace('.',',')}</div>
-        <div style={{marginTop:8,display:'flex',gap:8}}>
-          <button className="btn primary" onClick={() => navigate('/checkout')}>Finalizar compra</button>
-          <button className="btn" onClick={() => clearCart()}>Limpar</button>
+          ))}
         </div>
-      </div>
+      )}
+
+      {items.length > 0 && (
+        <div className="cart-summary">
+          <div className="cart-total">Total: R$ {total.toFixed(2).replace('.', ',')}</div>
+          <button className="btn primary" onClick={() => navigate('/checkout')}>Finalizar compra</button>
+        </div>
+      )}
     </div>
   )
 }

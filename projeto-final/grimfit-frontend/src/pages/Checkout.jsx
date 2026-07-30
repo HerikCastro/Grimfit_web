@@ -1,73 +1,136 @@
-import React, { useState } from 'react'
-import { useCart, useCartActions, cartTotal } from '../context/CartContext'
-import { createCheckout } from '../api'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { getAddresses, createAddress, createOrder } from '../api'
+import { useToast } from '../components/ToastContext'
 
-export default function Checkout(){
-  const items = useCart()
-  const { clearCart } = useCartActions()
-  const [method, setMethod] = useState('pix')
-  const [processing, setProcessing] = useState(false)
-  const [customer, setCustomer] = useState({ name:'', email:'' })
+const ENDERECO_VAZIO = {
+  apelido: '', cep: '', rua: '', numero: '',
+  complemento: '', bairro: '', cidade: '', estado: ''
+}
+
+export default function Checkout() {
+  const { items, total, refreshCart } = useCart()
   const navigate = useNavigate()
+  const { show } = useToast()
 
-  const total = cartTotal(items)
+  const [enderecos, setEnderecos] = useState([])
+  const [enderecoId, setEnderecoId] = useState('')
+  const [novoEndereco, setNovoEndereco] = useState(ENDERECO_VAZIO)
+  const [mostrarForm, setMostrarForm] = useState(false)
+  const [processando, setProcessando] = useState(false)
 
-  async function handlePay(e){
+  useEffect(() => {
+    carregarEnderecos()
+  }, [])
+
+  async function carregarEnderecos() {
+    try {
+      const lista = await getAddresses()
+      setEnderecos(lista || [])
+      if (lista && lista.length > 0) setEnderecoId(String(lista[0].id))
+      else setMostrarForm(true)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  async function handleSalvarEndereco(e) {
     e.preventDefault()
-    if (items.length===0) return alert('Carrinho vazio')
-    setProcessing(true)
-    try{
-      const payload = { items, customer, payment: { method } }
-      const res = await createCheckout(payload)
-      const order = res.order
-      // se cartão já pago, limpar carrinho e ir para confirmação
-      if (order.payment.status === 'paid') {
-        clearCart()
-      }
-      navigate(`/order/${order.id}`)
-    }catch(err){
+    try {
+      await createAddress(novoEndereco)
+      show('Endereço salvo', 'success')
+      setNovoEndereco(ENDERECO_VAZIO)
+      setMostrarForm(false)
+      await carregarEnderecos()
+    } catch (err) {
       console.error(err)
-      alert('Erro ao processar pagamento')
-    } finally { setProcessing(false) }
+      show('Erro ao salvar endereço', 'error')
+    }
+  }
+
+  async function handleFinalizar() {
+    if (items.length === 0) {
+      show('Carrinho vazio', 'error')
+      return
+    }
+    if (!enderecoId) {
+      show('Escolha ou cadastre um endereço', 'error')
+      return
+    }
+    setProcessando(true)
+    try {
+      const res = await createOrder(Number(enderecoId))
+      await refreshCart()
+      show('Pedido criado com sucesso', 'success')
+      navigate(`/order/${res.pedido_id}`)
+    } catch (err) {
+      console.error(err)
+      show(err?.response?.data?.message || 'Erro ao criar pedido', 'error')
+    } finally {
+      setProcessando(false)
+    }
   }
 
   return (
     <div className="checkout-page">
-      <h1>Checkout</h1>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:20}}>
-        <form onSubmit={handlePay} style={{padding:16,background:'var(--panel)',borderRadius:8}}>
-          <h3>Dados do comprador</h3>
-          <input placeholder="Nome completo" value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} />
-          <input placeholder="Email" value={customer.email} onChange={e=>setCustomer({...customer,email:e.target.value})} />
+      <h1>Finalizar pedido</h1>
 
-          <h3>Método de pagamento</h3>
-          <label><input type="radio" checked={method==='pix'} onChange={()=>setMethod('pix')} /> PIX</label>
-          <label><input type="radio" checked={method==='card'} onChange={()=>setMethod('card')} /> Cartão de Crédito</label>
-          <label><input type="radio" checked={method==='debit'} onChange={()=>setMethod('debit')} /> Cartão de Débito</label>
-          <label><input type="radio" checked={method==='boleto'} onChange={()=>setMethod('boleto')} /> Boleto</label>
+      <div className="checkout-grid">
+        <section className="checkout-endereco">
+          <h3>Endereço de entrega</h3>
 
-          {method==='card' && (
-            <div style={{marginTop:12}}>
-              <input placeholder="Número do cartão" />
-              <input placeholder="MM/AA" style={{width:120,marginRight:8}} />
-              <input placeholder="CVC" style={{width:80}} />
+          {enderecos.length > 0 && !mostrarForm && (
+            <div className="lista-enderecos">
+              {enderecos.map(end => (
+                <label key={end.id} className="endereco-opcao">
+                  <input
+                    type="radio"
+                    name="endereco"
+                    value={end.id}
+                    checked={String(enderecoId) === String(end.id)}
+                    onChange={() => setEnderecoId(String(end.id))}
+                  />
+                  {end.apelido ? `${end.apelido} — ` : ''}{end.rua}, {end.numero} — {end.bairro}, {end.cidade}/{end.estado}
+                </label>
+              ))}
+              <button type="button" onClick={() => setMostrarForm(true)}>+ Novo endereço</button>
             </div>
           )}
 
-          <div style={{marginTop:16}}>
-            <button className="btn primary" disabled={processing}>{processing? 'Processando...':'Pagar agora'}</button>
-          </div>
-        </form>
+          {mostrarForm && (
+            <form onSubmit={handleSalvarEndereco} className="form-endereco">
+              <input placeholder="Apelido (ex: Casa)" value={novoEndereco.apelido} onChange={e => setNovoEndereco({ ...novoEndereco, apelido: e.target.value })} />
+              <input placeholder="CEP" required value={novoEndereco.cep} onChange={e => setNovoEndereco({ ...novoEndereco, cep: e.target.value })} />
+              <input placeholder="Rua" required value={novoEndereco.rua} onChange={e => setNovoEndereco({ ...novoEndereco, rua: e.target.value })} />
+              <input placeholder="Número" required value={novoEndereco.numero} onChange={e => setNovoEndereco({ ...novoEndereco, numero: e.target.value })} />
+              <input placeholder="Complemento" value={novoEndereco.complemento} onChange={e => setNovoEndereco({ ...novoEndereco, complemento: e.target.value })} />
+              <input placeholder="Bairro" required value={novoEndereco.bairro} onChange={e => setNovoEndereco({ ...novoEndereco, bairro: e.target.value })} />
+              <input placeholder="Cidade" required value={novoEndereco.cidade} onChange={e => setNovoEndereco({ ...novoEndereco, cidade: e.target.value })} />
+              <input placeholder="Estado" required value={novoEndereco.estado} onChange={e => setNovoEndereco({ ...novoEndereco, estado: e.target.value })} />
+              <div className="form-endereco-acoes">
+                <button type="submit">Salvar endereço</button>
+                {enderecos.length > 0 && (
+                  <button type="button" onClick={() => setMostrarForm(false)}>Cancelar</button>
+                )}
+              </div>
+            </form>
+          )}
+        </section>
 
-        <aside style={{padding:16,background:'var(--panel)',borderRadius:8}}>
+        <section className="checkout-resumo">
           <h3>Resumo</h3>
-          <div>{items.length} itens</div>
-          <div style={{marginTop:8,fontWeight:700}}>Total: R$ {total.toFixed(2).replace('.',',')}</div>
-          <div style={{marginTop:12}}>
-            <small>Ao confirmar, você será redirecionado para a página do pedido.</small>
-          </div>
-        </aside>
+          {items.map(item => (
+            <div key={item.id} className="resumo-item">
+              <span>{item.nome} x{item.quantidade}</span>
+              <span>R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+            </div>
+          ))}
+          <div className="resumo-total">Total: R$ {total.toFixed(2).replace('.', ',')}</div>
+          <button className="btn primary" onClick={handleFinalizar} disabled={processando}>
+            {processando ? 'Processando...' : 'Confirmar pedido'}
+          </button>
+        </section>
       </div>
     </div>
   )

@@ -1,59 +1,100 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Hero from '../components/Hero'
 import BrandsCarousel from '../components/BrandsCarousel'
 import FeaturedSection from '../components/FeaturedSection'
 import CategorySection from '../components/CategorySection'
 import NovidadesCarousel from '../components/NovidadesCarousel'
-import { getProducts } from '../api'
+import { getProducts, getCategories, getBrands } from '../api'
 
-// Use only filenames here; components will resolve to /img/<filename>
-const heroProduct = { id:1, title: 'Tênis TN Shadow', subtitle: 'O clássico TN com alma tech e sola destacada.', price: '499,90', image: 'dcshoes.jpg' }
-
-const brands = [
-  { id: 'nike', name: 'NIKE', logo: 'nike.jpg' },
-  { id: 'adidas', name: 'ADIDAS', logo: 'adidas.jpg' },
-  { id: 'puma', name: 'PUMA', logo: 'puma.jpg' },
-  { id: 'sk8', name: 'SK8', logo: 'sk8.png' }
-]
-
-// products will be fetched from backend
-
-const categories = [
-  { id: 'nike', name: 'NIKE', image: 'nike.jpg' },
-  { id: 'adidas', name: 'ADIDAS', image: 'adidas.jpg' },
-  { id: 'puma', name: 'PUMA', image: 'puma.jpg' },
-  { id: 'tn', name: 'TN / RUNNER', image: 'dcshoes.jpg' },
-  { id: 'jordan', name: 'JORDAN', image: 'sk8.png' },
-  { id: 'casual', name: 'CASUAL', image: 'casa.png' }
-]
-
-export default function Home(){
-  const [products, setProducts] = useState([])
+export default function Home() {
+  const [produtos, setProdutos] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [marcas, setMarcas] = useState([])
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    async function loadProducts(){
-      try{
-        const data = await getProducts()
-        setProducts(data || [])
-      }catch(err){
-        console.error('Erro ao carregar produtos', err)
+    async function carregarTudo() {
+      setCarregando(true)
+      try {
+        const [resProdutos, resCategorias, resMarcas] = await Promise.all([
+          getProducts({ ordenar: 'recentes', limit: 12 }),
+          getCategories(),
+          getBrands()
+        ])
+        setProdutos(resProdutos.produtos || [])
+        setCategorias(resCategorias || [])
+        setMarcas(resMarcas || [])
+      } catch (err) {
+        console.error('Erro ao carregar a home', err)
+      } finally {
+        setCarregando(false)
       }
     }
-    loadProducts()
+    carregarTudo()
   }, [])
+
+  const brandsParaCarousel = marcas.map(m => ({ id: m.id, name: m.nome, logo: m.imagem_url }))
+  const categoriasParaSecao = categorias.map(c => ({ id: c.id, name: c.nome, image: c.imagem_url }))
+
+  const destaque = produtos[0]
 
   return (
     <div className="home-page">
-      <Hero product={heroProduct} />
+      {destaque ? (
+        <Hero product={{
+          id: destaque.id,
+          title: destaque.nome,
+          subtitle: destaque.descricao,
+          price: destaque.preco,
+          image: destaque.imagem_url
+        }} />
+      ) : !carregando && (
+        <section className="hero hero-vazio">
+          <div className="hero-content">
+            <h1>GRIMFIT</h1>
+            <p className="muted lead">Cadastre o primeiro produto no painel admin pra ele aparecer aqui.</p>
+          </div>
+        </section>
+      )}
 
       <div className="container">
-        <NovidadesCarousel items={products} />
+        {produtos.length > 0 ? (
+          <NovidadesCarousel items={produtos} />
+        ) : !carregando && (
+          <section className="secao-vazia">
+            <h2>Novidades</h2>
+            <p className="muted">Nenhum produto cadastrado ainda.</p>
+          </section>
+        )}
 
-        <FeaturedSection title="Mais vendidos" products={products} />
+        {produtos.length > 0 && (
+          <FeaturedSection title="Mais vendidos" products={produtos} />
+        )}
 
-        <BrandsCarousel brands={brands} />
+        {marcas.length > 0 ? (
+          <BrandsCarousel brands={brandsParaCarousel} />
+        ) : !carregando && (
+          <section className="secao-vazia">
+            <h2>Marcas</h2>
+            <p className="muted">Nenhuma marca cadastrada ainda.</p>
+          </section>
+        )}
 
-        <CategorySection title="Categorias" categories={categories} />
+        {categorias.length > 0 ? (
+          <CategorySection title="Categorias" categories={categoriasParaSecao} />
+        ) : !carregando && (
+          <section className="secao-vazia">
+            <h2>Categorias</h2>
+            <p className="muted">Nenhuma categoria cadastrada ainda.</p>
+          </section>
+        )}
+
+        {produtos.length === 0 && categorias.length === 0 && marcas.length === 0 && !carregando && (
+          <p className="dica-admin">
+            Loja ainda vazia — <Link to="/admin">acesse o painel admin</Link> pra começar a cadastrar.
+          </p>
+        )}
       </div>
     </div>
   )

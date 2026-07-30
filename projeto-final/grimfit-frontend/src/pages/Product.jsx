@@ -1,53 +1,193 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useCartActions } from '../context/CartContext'
-import { getProduct } from '../api'
-import { guessFromName } from '../utils/images'
+import { useParams, useNavigate } from 'react-router-dom'
+import { getProduct, getVariants, getFavorites, addFavorite, removeFavorite, getReviews, createReview } from '../api'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/ToastContext'
 import Img from '../components/Img'
 
-export default function Product(){
+export default function Product() {
   const { id } = useParams()
-  const [product, setProduct] = useState(null)
-  const [size, setSize] = useState('38')
-  const [color, setColor] = useState('Preto')
-  const { addToCart } = useCartActions()
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { addItem } = useCart()
+  const { show } = useToast()
 
-  useEffect(()=>{ fetchProduct() },[id])
+  const [produto, setProduto] = useState(null)
+  const [variacoes, setVariacoes] = useState([])
+  const [variacaoId, setVariacaoId] = useState('')
+  const [quantidade, setQuantidade] = useState(1)
+  const [adicionando, setAdicionando] = useState(false)
+  const [favoritado, setFavoritado] = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [novaAvaliacao, setNovaAvaliacao] = useState({ nota: 5, comentario: '' })
 
-  async function fetchProduct(){
-    try{
-      const res = await getProduct(id)
-      if (res.ok) setProduct(res.produto || res.dados || res)
-    }catch(e){ console.error(e) }
+  useEffect(() => {
+    async function carregar() {
+      try {
+        const p = await getProduct(id)
+        setProduto(p)
+
+        const v = await getVariants(id)
+        setVariacoes(v || [])
+        if (v && v.length > 0) setVariacaoId(String(v[0].id))
+
+        const r = await getReviews(id)
+        setReviews(r || [])
+
+        if (user) {
+          const favs = await getFavorites()
+          setFavoritado((favs || []).some(f => f.id === Number(id)))
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    carregar()
+  }, [id, user])
+
+  async function handleAdd() {
+    if (!user) {
+      show('Faça login pra adicionar ao carrinho', 'error')
+      navigate('/login')
+      return
+    }
+    if (!variacaoId) {
+      show('Escolha tamanho/cor disponível', 'error')
+      return
+    }
+    setAdicionando(true)
+    try {
+      await addItem(Number(variacaoId), quantidade)
+      show('Adicionado ao carrinho', 'success')
+    } catch (e) {
+      console.error(e)
+      show('Erro ao adicionar ao carrinho', 'error')
+    } finally {
+      setAdicionando(false)
+    }
   }
 
-  function handleAdd(){
-    if (!product) return
-    addToCart({ id: product.id, name: product.nome || product.name, price: product.preco || product.price, image: product.imagem || product.image, size, color, qty: 1 })
-    alert('Adicionado ao carrinho')
+  async function handleFavorito() {
+    if (!user) {
+      show('Faça login pra favoritar', 'error')
+      navigate('/login')
+      return
+    }
+    try {
+      if (favoritado) {
+        await removeFavorite(id)
+        setFavoritado(false)
+      } else {
+        await addFavorite(Number(id))
+        setFavoritado(true)
+      }
+    } catch (e) {
+      show('Erro ao atualizar favorito', 'error')
+    }
   }
 
-  if (!product) return <div>Carregando produto...</div>
+  async function handleEnviarAvaliacao(e) {
+    e.preventDefault()
+    if (!user) {
+      show('Faça login pra avaliar', 'error')
+      return
+    }
+    try {
+      await createReview({ produto_id: Number(id), ...novaAvaliacao })
+      show('Avaliação enviada', 'success')
+      setNovaAvaliacao({ nota: 5, comentario: '' })
+      const r = await getReviews(id)
+      setReviews(r || [])
+    } catch (err) {
+      show(err?.response?.data?.message || 'Erro ao enviar avaliação', 'error')
+    }
+  }
 
-  const rawImg = product.imagem || product.image || guessFromName(product) || '/src/assets/shoe1.svg'
+  if (!produto) return <div>Carregando produto...</div>
+
+  const variacaoEscolhida = variacoes.find(v => String(v.id) === variacaoId)
+  const semEstoque = variacaoEscolhida && variacaoEscolhida.estoque <= 0
 
   return (
     <div className="product-page">
       <div className="gallery">
         <div className="main-image">
-          <Img src={rawImg} alt={product.nome || product.name} onLoad={e=>{ e.currentTarget.style.opacity='1' }} />
+          <Img src={produto.imagem_url} alt={produto.nome} onLoad={e => { e.currentTarget.style.opacity = '1' }} />
         </div>
-        <div className="thumbs">thumbs</div>
       </div>
       <div className="details">
-        <h1>{product.nome || product.name}</h1>
-        <div className="price">R$ {product.preco || product.price}</div>
-        <p>{product.descricao || product.description}</p>
-        <div className="selectors">
-          <select value={size} onChange={e=>setSize(e.target.value)}><option>38</option><option>39</option></select>
-          <select value={color} onChange={e=>setColor(e.target.value)}><option>Preto</option><option>Roxo</option></select>
+        <div className="produto-titulo-linha">
+          <h1>{produto.nome}</h1>
+          <button className="botao-favorito" onClick={handleFavorito} aria-pressed={favoritado}>
+            {favoritado ? '★ Favoritado' : '☆ Favoritar'}
+          </button>
         </div>
-        <button className="btn primary" onClick={handleAdd}>Adicionar ao carrinho</button>
+        <div className="price">R$ {produto.preco}</div>
+        <p>{produto.descricao}</p>
+
+        {variacoes.length > 0 ? (
+          <div className="selectors">
+            <label htmlFor="variacao">Tamanho / Cor</label>
+            <select id="variacao" value={variacaoId} onChange={e => setVariacaoId(e.target.value)}>
+              {variacoes.map(v => (
+                <option key={v.id} value={v.id} disabled={v.estoque <= 0}>
+                  {v.tamanho || '-'} / {v.cor || '-'} {v.estoque <= 0 ? '(sem estoque)' : ''}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="quantidade">Quantidade</label>
+            <input
+              id="quantidade"
+              type="number"
+              min="1"
+              value={quantidade}
+              onChange={e => setQuantidade(Math.max(1, Number(e.target.value)))}
+            />
+          </div>
+        ) : (
+          <p className="muted">Nenhuma variação (tamanho/cor) cadastrada pra esse produto ainda.</p>
+        )}
+
+        <button
+          className="btn primary"
+          onClick={handleAdd}
+          disabled={adicionando || variacoes.length === 0 || semEstoque}
+        >
+          {adicionando ? 'Adicionando...' : 'Adicionar ao carrinho'}
+        </button>
+
+        <section className="secao-avaliacoes">
+          <h3>Avaliações</h3>
+          {reviews.length === 0 ? (
+            <p className="muted">Nenhuma avaliação ainda.</p>
+          ) : (
+            <div className="lista-avaliacoes">
+              {reviews.map((r, i) => (
+                <div key={i} className="avaliacao-item">
+                  <strong>{r.nome}</strong> — {'★'.repeat(r.nota)}{'☆'.repeat(5 - r.nota)}
+                  <p>{r.comentario}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {user && (
+            <form onSubmit={handleEnviarAvaliacao} className="form-avaliacao">
+              <label htmlFor="nota">Nota</label>
+              <select id="nota" value={novaAvaliacao.nota} onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota: Number(e.target.value) })}>
+                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+              <textarea
+                placeholder="Comentário (opcional)"
+                value={novaAvaliacao.comentario}
+                onChange={e => setNovaAvaliacao({ ...novaAvaliacao, comentario: e.target.value })}
+              />
+              <button type="submit" className="btn">Enviar avaliação</button>
+            </form>
+          )}
+        </section>
       </div>
     </div>
   )

@@ -4,72 +4,70 @@ import { loginUser, registerUser, setAuthToken, getMe } from '../api'
 const AuthContext = createContext()
 const STORAGE_KEY = 'grimfit_auth_v1'
 
-export function AuthProvider({ children }){
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
+  const [ready, setReady] = useState(false)
 
-  useEffect(()=>{
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw){
-        const data = JSON.parse(raw)
-        setUser(data.user)
-        setToken(data.token)
-        setAuthToken(data.token)
-      }
-    }catch(e){/*ignore*/}
-  },[])
-
-  // If token exists but user is null, try to fetch /me
-  useEffect(()=>{
-    async function fetchMe(){
-      if (token && !user){
-        try{
-          const res = await getMe()
-          if (res.ok) setUser(res.user)
-        }catch(e){
-          console.error('Could not fetch /me', e.message)
+  // Recupera sessão salva ao abrir o site. Guardar o token no
+  // localStorage aqui é só pra manter o login entre recarregamentos
+  // de página — não tem relação com o problema de localStorage em
+  // artifacts sandboxed, isso é um app React de verdade.
+  useEffect(() => {
+    async function restaurarSessao() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          const data = JSON.parse(raw)
+          if (data.token) {
+            setAuthToken(data.token)
+            setToken(data.token)
+            // Busca o perfil atualizado em vez de confiar cegamente
+            // no que ficou salvo (pode ter mudado tipo/nome no banco).
+            const perfil = await getMe()
+            setUser(perfil)
+          }
         }
+      } catch (e) {
+        localStorage.removeItem(STORAGE_KEY)
+      } finally {
+        setReady(true)
       }
     }
-    fetchMe()
-  },[token, user])
+    restaurarSessao()
+  }, [])
 
-  useEffect(()=>{
-    if (token) setAuthToken(token)
-    else setAuthToken(null)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token }))
-  },[user, token])
-
-  async function login(credentials){
+  async function login(credentials) {
     const res = await loginUser(credentials)
-    if (res.ok){
+    if (res.ok) {
       setUser(res.user)
       setToken(res.token)
+      setAuthToken(res.token)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token }))
     }
     return res
   }
 
-  async function register(payload){
-    const res = await registerUser(payload)
-    return res
+  async function register(payload) {
+    return await registerUser(payload)
   }
 
-  function logout(){
+  function logout() {
     setUser(null)
     setToken(null)
+    setAuthToken(null)
     localStorage.removeItem(STORAGE_KEY)
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, ready, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth(){
+export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  if (!ctx) throw new Error('useAuth deve ser usado dentro de AuthProvider')
   return ctx
 }

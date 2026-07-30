@@ -1,49 +1,38 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { getOrder, confirmOrder } from '../api'
-import { useCartActions } from '../context/CartContext'
+import { useParams, Link } from 'react-router-dom'
+import { getOrder } from '../api'
 
-export default function OrderConfirmation(){
+export default function OrderConfirmation() {
   const { id } = useParams()
-  const [order, setOrder] = useState(null)
-  const { clearCart } = useCartActions()
+  const [pedido, setPedido] = useState(null)
+  const [erro, setErro] = useState(false)
 
-  useEffect(()=>{
-    async function load(){
-      try{
-        const res = await getOrder(id)
-        setOrder(res.order)
-      }catch(e){ console.error(e) }
-    }
-    load()
-  },[id])
+  useEffect(() => {
+    getOrder(id).then(setPedido).catch(() => setErro(true))
+  }, [id])
 
-  async function handleConfirm(){
-    try{
-      const res = await confirmOrder(id)
-      setOrder(res.order)
-      clearCart()
-      alert('Pagamento confirmado (simulado)')
-    }catch(e){ console.error(e); alert('Erro') }
-  }
-
-  if (!order) return <div>Carregando pedido...</div>
+  if (erro) return <div>Pedido não encontrado.</div>
+  if (!pedido) return <div>Carregando pedido...</div>
 
   return (
-    <div className="order-page" style={{padding:16}}>
-      <h1>Pedido #{order.id}</h1>
-      <div>Data: {new Date(order.createdAt).toLocaleString()}</div>
-      <div style={{marginTop:12}}>
-        <h3>Pagamento</h3>
-        <div>Método: {order.payment.method}</div>
-        <div>Status: {order.payment.status}</div>
-        <pre style={{background:'#0b0b0d',padding:12,borderRadius:8}}>{JSON.stringify(order.payment.info,null,2)}</pre>
+    <div className="order-page">
+      <h1>Pedido #{pedido.id}</h1>
+      <div className="muted">Feito em: {new Date(pedido.created_at).toLocaleString('pt-BR')}</div>
+      <div className="pedido-status">Status: <strong>{pedido.status}</strong></div>
+
+      <h3>Itens</h3>
+      <div className="pedido-itens">
+        {pedido.itens?.map((item, i) => (
+          <div key={i} className="pedido-item">
+            <span>{item.nome} x{item.quantidade}</span>
+            <span>R$ {item.preco_unitario}</span>
+          </div>
+        ))}
       </div>
-      {order.payment.status !== 'paid' && (
-        <div style={{marginTop:12}}>
-          <button className="btn primary" onClick={handleConfirm}>Simular confirmação do pagamento</button>
-        </div>
-      )}
+
+      <div className="pedido-total">Total: R$ {pedido.valor_total}</div>
+
+      <Link className="btn primary" to="/catalog">Continuar comprando</Link>
     </div>
   )
 }
