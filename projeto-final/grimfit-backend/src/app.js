@@ -12,7 +12,6 @@ const { generalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const variantRoutes = require("./routes/variantRoutes");
-const estiloRoutes = require("./routes/estiloRoutes");
 const styleRoutes = require("./routes/styleRoutes");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -80,7 +79,6 @@ app.use("/api/password", authLimiter, passwordRoutes);
 
 app.use("/api/products", productRoutes);
 app.use("/api/variants", variantRoutes);
-app.use("/api/estilos", estiloRoutes);
 app.use("/api/styles", styleRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
