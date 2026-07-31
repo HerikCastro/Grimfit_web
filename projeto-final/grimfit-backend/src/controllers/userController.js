@@ -13,7 +13,9 @@ exports.profile = async (req, res) => {
         nome,
         email,
         telefone,
-        tipo
+        tipo,
+        genero,
+        preferencias_definidas
         FROM usuarios
         WHERE id = $1
         `,
@@ -36,15 +38,23 @@ exports.profile = async (req, res) => {
 
 };
 
+const GENEROS_VALIDOS = ["masculino", "feminino", "prefiro_nao_informar", "outro"];
+
 exports.updateProfile = async (req, res) => {
 
   try {
 
-    const { nome, telefone } = req.body;
+    const { nome, telefone, genero } = req.body;
 
     if (!nome || !nome.trim()) {
       return res.status(400).json({
         message: "Nome é obrigatório"
+      });
+    }
+
+    if (genero !== undefined && genero !== null && !GENEROS_VALIDOS.includes(genero)) {
+      return res.status(400).json({
+        message: `genero precisa ser um de: ${GENEROS_VALIDOS.join(", ")}`
       });
     }
 
@@ -53,10 +63,11 @@ exports.updateProfile = async (req, res) => {
       UPDATE usuarios
       SET
         nome = $1,
-        telefone = $2
-      WHERE id = $3
+        telefone = $2,
+        genero = COALESCE($3, genero)
+      WHERE id = $4
       `,
-      [nome, telefone, req.user.id]
+      [nome, telefone, genero, req.user.id]
     );
 
     return res.json({
@@ -118,6 +129,138 @@ exports.changePassword = async (req, res) => {
 
     return res.json({
       message: "Senha alterada com sucesso"
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
+// ===== Preferências de estilo (onboarding) =====
+
+exports.getPreferencias = async (req, res) => {
+
+  try {
+
+    const { rows: estilos } = await pool.query(
+      `
+      SELECT e.id, e.nome
+      FROM usuario_estilos_preferidos uep
+      JOIN estilos e ON e.id = uep.estilo_id
+      WHERE uep.usuario_id = $1
+      ORDER BY e.nome
+      `,
+      [req.user.id]
+    );
+
+    return res.json({ estilos });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
+exports.setPreferencias = async (req, res) => {
+
+  try {
+
+    const { estilo_ids } = req.body;
+
+    if (!Array.isArray(estilo_ids)) {
+      return res.status(400).json({
+        message: "estilo_ids precisa ser uma lista"
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM usuario_estilos_preferidos WHERE usuario_id = $1",
+      [req.user.id]
+    );
+
+    for (const estiloId of estilo_ids) {
+      await pool.query(
+        `
+        INSERT INTO usuario_estilos_preferidos (usuario_id, estilo_id)
+        VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+        `,
+        [req.user.id, Number(estiloId)]
+      );
+    }
+
+    await pool.query(
+      "UPDATE usuarios SET preferencias_definidas = TRUE WHERE id = $1",
+      [req.user.id]
+    );
+
+    return res.json({
+      message: "Preferências salvas"
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Erro interno"
+    });
+
+  }
+
+};
+
+// ===== Confirmação de senha pra ações críticas (admin) =====
+// Em vez de uma senha administrativa separada (mais um segredo
+// pra vazar/gerenciar), reautentica com a PRÓPRIA senha da conta
+// logada — identifica quem confirmou, sem criar segredo novo.
+exports.confirmarSenha = async (req, res) => {
+
+  try {
+
+    const { senha } = req.body;
+
+    if (!senha) {
+      return res.status(400).json({
+        message: "Senha é obrigatória"
+      });
+    }
+
+    const { rows: usuarios } = await pool.query(
+      "SELECT senha FROM usuarios WHERE id = $1",
+      [req.user.id]
+    );
+
+    if (usuarios.length === 0) {
+      return res.status(404).json({
+        message: "Usuário não encontrado"
+      });
+    }
+
+    const valida = await bcrypt.compare(senha, usuarios[0].senha);
+
+    if (!valida) {
+      return res.status(401).json({
+        confirmado: false,
+        message: "Senha incorreta"
+      });
+    }
+
+    return res.json({
+      confirmado: true
     });
 
   } catch (error) {
