@@ -8,9 +8,9 @@ const {
   profile,
   updateProfile,
   changePassword,
-  getPreferencias,
-  setPreferencias,
-  confirmarSenha
+  getPreferences,
+  setPreferences,
+  confirmPassword
 } = require("../controllers/userController");
 
 router.get("/profile", auth, profile);
@@ -19,10 +19,10 @@ router.put("/profile", auth, updateProfile);
 
 router.put("/password", auth, changePassword);
 
-router.get("/preferences", auth, getPreferencias);
+router.get("/preferences", auth, getPreferences);
 
-router.put("/preferences", auth, setPreferencias);
+router.put("/preferences", auth, setPreferences);
 
-router.post("/confirmar-senha", auth, confirmarSenha);
+router.post("/confirm-password", auth, confirmPassword);
 
 module.exports = router;

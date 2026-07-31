@@ -4,7 +4,7 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const confirmarSenha = require("../middleware/confirmarSenha");
+const ConfirmPassword = require("../middleware/ConfirmPassword");
 const upload = require("../uploads/multer");
 
 const {
@@ -39,7 +39,7 @@ router.delete(
   "/:id",
   auth,
   admin,
-  confirmarSenha,
+  ConfirmPassword,
   deleteBrand
 );
 

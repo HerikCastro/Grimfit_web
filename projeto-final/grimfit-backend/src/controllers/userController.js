@@ -145,7 +145,7 @@ exports.changePassword = async (req, res) => {
 
 // ===== Preferências de estilo (onboarding) =====
 
-exports.getPreferencias = async (req, res) => {
+exports.getPreferences = async (req, res) => {
 
   try {
 
@@ -174,7 +174,7 @@ exports.getPreferencias = async (req, res) => {
 
 };
 
-exports.setPreferencias = async (req, res) => {
+exports.setPreferences = async (req, res) => {
 
   try {
 
@@ -227,7 +227,7 @@ exports.setPreferencias = async (req, res) => {
 // Em vez de uma senha administrativa separada (mais um segredo
 // pra vazar/gerenciar), reautentica com a PRÓPRIA senha da conta
 // logada — identifica quem confirmou, sem criar segredo novo.
-exports.confirmarSenha = async (req, res) => {
+exports.confirmPassword = async (req, res) => {
 
   try {
 
