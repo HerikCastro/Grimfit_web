@@ -7,7 +7,10 @@ const auth = require("../middleware/auth");
 const {
   profile,
   updateProfile,
-  changePassword
+  changePassword,
+  getPreferencias,
+  setPreferencias,
+  confirmarSenha
 } = require("../controllers/userController");
 
 router.get("/profile", auth, profile);
@@ -15,5 +18,11 @@ router.get("/profile", auth, profile);
 router.put("/profile", auth, updateProfile);
 
 router.put("/password", auth, changePassword);
+
+router.get("/preferencias", auth, getPreferencias);
+
+router.put("/preferencias", auth, setPreferencias);
+
+router.post("/confirmar-senha", auth, confirmarSenha);
 
 module.exports = router;
