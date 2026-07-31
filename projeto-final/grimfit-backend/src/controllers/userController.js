@@ -178,11 +178,11 @@ exports.setPreferencias = async (req, res) => {
 
   try {
 
-    const { estilo_ids } = req.body;
+    const { style_ids } = req.body;
 
-    if (!Array.isArray(estilo_ids)) {
+    if (!Array.isArray(style_ids)) {
       return res.status(400).json({
-        message: "estilo_ids precisa ser uma lista"
+        message: "style_ids precisa ser uma lista"
       });
     }
 
@@ -191,14 +191,14 @@ exports.setPreferencias = async (req, res) => {
       [req.user.id]
     );
 
-    for (const estiloId of estilo_ids) {
+    for (const styleId of style_ids) {
       await pool.query(
         `
         INSERT INTO usuario_estilos_preferidos (usuario_id, estilo_id)
         VALUES ($1, $2)
         ON CONFLICT DO NOTHING
         `,
-        [req.user.id, Number(estiloId)]
+        [req.user.id, Number(styleId)]
       );
     }
 

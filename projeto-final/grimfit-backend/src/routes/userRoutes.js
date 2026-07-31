@@ -19,9 +19,9 @@ router.put("/profile", auth, updateProfile);
 
 router.put("/password", auth, changePassword);
 
-router.get("/preferencias", auth, getPreferencias);
+router.get("/preferences", auth, getPreferencias);
 
-router.put("/preferencias", auth, setPreferencias);
+router.put("/preferences", auth, setPreferencias);
 
 router.post("/confirmar-senha", auth, confirmarSenha);
 

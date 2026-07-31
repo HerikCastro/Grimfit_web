@@ -4,7 +4,7 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const confirmarSenha = require("../middleware/confirmarSenha");
+const ConfirmPassword = require("../middleware/ConfirmPassword");
 
 const {
   getUsers,
@@ -23,7 +23,7 @@ router.put(
   "/:id",
   auth,
   admin,
-  confirmarSenha,
+  ConfirmPassword,
   updateUserType
 );
 
@@ -31,7 +31,7 @@ router.delete(
   "/:id",
   auth,
   admin,
-  confirmarSenha,
+  ConfirmPassword,
   deleteUser
 );
 
