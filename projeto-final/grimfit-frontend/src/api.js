@@ -352,22 +352,22 @@ export default API
 
 // ===== Estilos =====
 export async function getEstilos() {
-  const res = await API.get('/api/estilos')
+  const res = await API.get('/api/styles')
   return res.data
 }
 
 export async function adminCreateEstilo(payload) {
-  const res = await API.post('/api/estilos', payload)
+  const res = await API.post('/api/styles', payload)
   return res.data
 }
 
 export async function adminUpdateEstilo(id, payload) {
-  const res = await API.put(`/api/estilos/${id}`, payload)
+  const res = await API.put(`/api/styles/${id}`, payload)
   return res.data
 }
 
 export async function adminDeleteEstilo(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/estilos/${id}`, {
+  const res = await API.delete(`/api/styles/${id}`, {
     data: { confirmacao_senha: confirmacaoSenha }
   })
   return res.data
@@ -375,17 +375,17 @@ export async function adminDeleteEstilo(id, confirmacaoSenha) {
 
 // ===== Preferências do usuário =====
 export async function getPreferencias() {
-  const res = await API.get('/api/users/preferencias')
+  const res = await API.get('/api/users/preferences')
   return res.data
 }
 
 export async function setPreferencias(estilo_ids) {
-  const res = await API.put('/api/users/preferencias', { estilo_ids })
+  const res = await API.put('/api/users/preferences', { estilo_ids })
   return res.data
 }
 
 // ===== Confirmação de senha (ações críticas) =====
 export async function confirmarSenha(senha) {
-  const res = await API.post('/api/users/confirmar-senha', { senha })
+  const res = await API.post('/api/users/confirm-password', { senha })
   return res.data
 }

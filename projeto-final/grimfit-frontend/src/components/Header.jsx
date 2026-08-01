@@ -38,10 +38,14 @@ export default function Header() {
         <nav className="nav-direita" aria-label="Conta e carrinho">
           <ul className="nav-links">
             <li>
-              <Link to="/cart" onClick={fecharMenu} className="nav-carrinho">
-                <span aria-label={`Carrinho com ${count} itens`}>
-                  🛍 {count > 0 && <span className="badge-count">{count}</span>}
+              <Link to="/cart" onClick={fecharMenu} className="nav-carrinho" aria-label={`Carrinho com ${count} itens`}>
+                <span className="nav-carrinho-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M7 4H5L3 9v2h2l3.6 7.59c.18.37.55.61.96.61H19v-2h-7.44l-.9-1.63L17.7 11H6.21l-.94-2H2V7h2l1-2h4V4zm0 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                  </svg>
                 </span>
+                <span className="nav-carrinho-text">Carrinho</span>
+                {count > 0 && <span className="badge-count">{count}</span>}
               </Link>
             </li>
             {user ? (

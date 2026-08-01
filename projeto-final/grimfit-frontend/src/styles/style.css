@@ -325,7 +325,7 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  height: 64px;
+  min-height: 88px;
 }
 
 /* Logo centralizada no desktop */
@@ -359,22 +359,51 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 .nav-links a:hover, .nav-links button:hover { color: var(--text); background: var(--surface) }
 
 /* Carrinho com badge */
-.nav-carrinho { position: relative; font-size: 18px }
+.nav-carrinho {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text-2);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: var(--transition);
+}
+.nav-carrinho:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.nav-carrinho-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-carrinho-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.nav-carrinho-text {
+  display: none;
+}
 .badge-count {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -6px;
+  right: -6px;
   background: var(--accent);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 3px;
+  padding: 0 4px;
 }
 
 /* Avatar usuário + dropdown */
@@ -469,11 +498,14 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 .menu-mobile a:hover { color: var(--text); background: var(--surface) }
 
 @media (min-width: 768px) {
-  .cabecalho-topo { padding: 0 28px; height: 70px }
+  .cabecalho-topo { padding: 0 28px; min-height: 88px }
   .nav-esquerda, .nav-direita { display: flex; align-items: center }
   .botao-menu { display: none }
   .menu-mobile { display: none !important }
   .logo-imagem { height: 54px }
+  .nav-carrinho-text {
+    display: inline;
+  }
 }
 
 /* ─────────────────────────────────────────────
@@ -723,6 +755,32 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 .auth-links a { color: var(--accent); font-weight: 600 }
 .auth-links a:hover { text-decoration: underline }
 
+/* Stronger purple panel and centered content for auth visual */
+.auth-visual {
+  /* make the left panel fully purple/tinted */
+  background: linear-gradient(160deg, var(--accent), var(--accent-2));
+  border-right: none;
+  color: #fff;
+}
+.auth-visual-conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+}
+.auth-logo-big { width: 200px }
+.auth-slogan {
+  /* plain white slogan on purple background */
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #fff !important;
+  color: #fff;
+}
+
 @media (min-width: 768px) {
   .auth-visual { display: flex }
   .auth-logo-mobile { display: none }
@@ -916,10 +974,71 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
   margin-bottom: 20px;
 }
 
+/* Admin section subtle purple background and padding to match auth visual */
+.admin-secao {
+  background: linear-gradient(90deg, rgba(138,43,226,0.03), transparent);
+  border: 1px solid rgba(138,43,226,0.04);
+  padding: 14px;
+  border-radius: 10px;
+}
+
+
 .admin-form { display: flex; flex-direction: column; gap: 14px; max-width: 520px }
 .admin-form-row { display: grid; grid-template-columns: 1fr; gap: 14px }
 @media (min-width: 640px) { .admin-form-row { grid-template-columns: repeat(3, 1fr) } }
 .admin-form-acoes { display: flex; gap: 10px; margin-top: 4px }
+
+.admin-form button,
+.estilo-acoes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+/* Make general admin buttons match the purple style */
+.admin-secao button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.admin-secao button.danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.admin-form button:hover,
+.estilo-acoes button:hover {
+  opacity: 0.95;
+}
+
+.admin-form button:disabled,
+.estilo-acoes button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.estilo-acoes button.danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.estilo-acoes button.danger:hover {
+  background: rgba(239,68,68,0.08);
+}
 
 .admin-preview {
   width: 100px; height: 100px;
@@ -984,6 +1103,10 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+.estilo-item-admin {
+  border-left: 6px solid rgba(138,43,226,0.08);
+  padding-left: 12px;
+}
 .estilo-acoes { display: flex; gap: 8px }
 
 /* Usuários no admin */
@@ -999,6 +1122,7 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
   transition: var(--transition);
   flex-wrap: wrap;
 }
+.usuario-item { border-left: 6px solid rgba(138,43,226,0.04) }
 .usuario-eu { border-color: rgba(138,43,226,0.2); background: rgba(138,43,226,0.03) }
 .usuario-avatar {
   width: 38px; height: 38px;
