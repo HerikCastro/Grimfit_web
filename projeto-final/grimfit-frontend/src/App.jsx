@@ -17,6 +17,7 @@ import Checkout from './pages/Checkout'
 import OrderConfirmation from './pages/OrderConfirmation'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Onboarding from './pages/Onboarding'
 
 function AppContent() {
   const { ready } = useAuth()
@@ -24,12 +25,11 @@ function AppContent() {
 
   if (!ready) return <LoadingScreen />
 
-  // Fundo com a marca aparece em todas as páginas, menos no carrinho
-  // (pedido do usuário — lá o fundo distrai da lista de itens).
-  const semFundoMarca = location.pathname === '/cart'
+  const rotasSemFundo = ['/cart', '/login', '/register', '/onboarding']
+  const semFundo = rotasSemFundo.some(r => location.pathname.startsWith(r))
 
   return (
-    <div className={`app-root ${semFundoMarca ? '' : 'fundo-marca'}`}>
+    <div className={`app-root ${semFundo ? '' : 'fundo-marca'}`}>
       <Header />
       <main className="container">
         <Routes>
@@ -37,10 +37,11 @@ function AppContent() {
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-          <Route path="/order/:id" element={<RequireAuth><OrderConfirmation /></RequireAuth>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+          <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+          <Route path="/order/:id" element={<RequireAuth><OrderConfirmation /></RequireAuth>} />
           <Route path="/perfil" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/admin" element={<RequireAuth adminOnly><Admin /></RequireAuth>} />
         </Routes>

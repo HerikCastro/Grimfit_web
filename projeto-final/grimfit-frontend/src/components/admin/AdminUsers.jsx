@@ -2,87 +2,89 @@ import React, { useEffect, useState } from 'react'
 import { adminGetUsers, adminUpdateUserType, adminDeleteUser } from '../../api'
 import { useToast } from '../ToastContext'
 import { useAuth } from '../../context/AuthContext'
+import ConfirmModal from '../ui/ConfirmModal'
 
 const TIPOS = ['cliente', 'admin', 'suporte']
 
 export default function AdminUsers() {
   const { show } = useToast()
-  const { user: usuarioLogado } = useAuth()
+  const { user: eu } = useAuth()
   const [usuarios, setUsuarios] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [modal, setModal] = useState(null) // { tipo: 'apagar'|'promover', id, novoTipo? }
+  const [loadingModal, setLoadingModal] = useState(false)
 
   useEffect(() => { carregar() }, [])
 
   async function carregar() {
     setCarregando(true)
-    try {
-      setUsuarios(await adminGetUsers())
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setCarregando(false)
-    }
+    try { setUsuarios(await adminGetUsers()) } catch (e) { console.error(e) } finally { setCarregando(false) }
   }
 
-  async function handleTipo(id, tipo) {
+  async function handleConfirm(senha) {
+    setLoadingModal(true)
     try {
-      await adminUpdateUserType(id, tipo)
-      show('Tipo de usuário atualizado', 'success')
+      if (modal.tipo === 'apagar') {
+        await adminDeleteUser(modal.id, senha)
+        show('Usuário removido', 'success')
+      } else {
+        await adminUpdateUserType(modal.id, modal.novoTipo, senha)
+        show('Tipo atualizado', 'success')
+      }
+      setModal(null)
       await carregar()
     } catch (err) {
-      show(err?.response?.data?.message || 'Erro ao atualizar', 'error')
-    }
-  }
-
-  async function apagar(id) {
-    if (!window.confirm('Apagar esse usuário? Só funciona se ele não tiver pedidos.')) return
-    try {
-      await adminDeleteUser(id)
-      show('Usuário removido', 'success')
-      await carregar()
-    } catch (err) {
-      show(err?.response?.data?.message || 'Erro ao remover usuário', 'error')
-    }
+      show(err?.response?.data?.message || 'Senha incorreta ou erro', 'error')
+    } finally { setLoadingModal(false) }
   }
 
   return (
     <div className="admin-secao">
+      {modal && (
+        <ConfirmModal
+          mensagem={
+            modal.tipo === 'apagar'
+              ? 'Apagar esse usuário? Só funciona se ele não tiver pedidos vinculados.'
+              : `Alterar tipo para "${modal.novoTipo}"?`
+          }
+          onConfirm={handleConfirm}
+          onCancel={() => setModal(null)}
+          loading={loadingModal}
+        />
+      )}
       <h3>Usuários</h3>
-      {carregando ? (
-        <p className="muted">Carregando...</p>
-      ) : (
-        <table className="admin-table">
-          <thead>
-            <tr><th>Nome</th><th>Email</th><th>Tipo</th><th>Ações</th></tr>
-          </thead>
-          <tbody>
-            {usuarios.map(u => {
-              const ehVoceMesmo = usuarioLogado && u.id === usuarioLogado.id
-              return (
-                <tr key={u.id}>
-                  <td>{u.nome}</td>
-                  <td>{u.email}</td>
-                  <td>
-                    <select
-                      value={u.tipo}
-                      disabled={ehVoceMesmo}
-                      onChange={e => handleTipo(u.id, e.target.value)}
-                    >
-                      {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    {ehVoceMesmo ? (
-                      <span className="muted">Você</span>
-                    ) : (
-                      <button onClick={() => apagar(u.id)}>Apagar</button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {carregando ? <p className="muted">Carregando...</p> : (
+        <div className="usuarios-lista">
+          {usuarios.map(u => {
+            const ehEu = eu && u.id === eu.id
+            return (
+              <div key={u.id} className={`usuario-item ${ehEu ? 'usuario-eu' : ''}`}>
+                <div className="usuario-avatar">{u.nome?.[0]?.toUpperCase()}</div>
+                <div className="usuario-info">
+                  <span className="usuario-nome">{u.nome} {ehEu && <span className="badge-voce">Você</span>}</span>
+                  <span className="usuario-email muted">{u.email}</span>
+                </div>
+                <div className="usuario-acoes">
+                  {!ehEu && (
+                    <>
+                      <select
+                        value={u.tipo}
+                        onChange={e => setModal({ tipo: 'promover', id: u.id, novoTipo: e.target.value })}
+                        className="usuario-tipo-select"
+                      >
+                        {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button className="btn danger small" onClick={() => setModal({ tipo: 'apagar', id: u.id })}>
+                        Apagar
+                      </button>
+                    </>
+                  )}
+                  {ehEu && <span className={`badge-tipo badge-${u.tipo}`}>{u.tipo}</span>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

@@ -1,28 +1,19 @@
-import React, { useEffect, useState } from 'react'
-import { resolveImage } from '../utils/images'
+import React, { useState } from 'react'
 
-export default function Img({ src, alt = '', className, style, onLoad, loading = 'lazy', ...rest }){
-  const [current, setCurrent] = useState(() => resolveImage(src))
+const FALLBACK = '/src/assets/shoe1.svg'
 
-  useEffect(()=>{
-    setCurrent(resolveImage(src))
-  },[src])
-
-  function handleError(){
-    // fallback to a local svg asset if image not found
-    if (current !== '/src/assets/shoe1.svg') setCurrent('/src/assets/shoe1.svg')
-  }
+export default function Img({ src, alt = '', className = '', onLoad, ...props }) {
+  const [erro, setErro] = useState(false)
+  const resolvedSrc = erro || !src ? FALLBACK : src
 
   return (
     <img
-      src={current}
+      src={resolvedSrc}
       alt={alt}
       className={className}
-      style={style}
-      onError={handleError}
+      onError={() => setErro(true)}
       onLoad={onLoad}
-      loading={loading}
-      {...rest}
+      {...props}
     />
   )
 }

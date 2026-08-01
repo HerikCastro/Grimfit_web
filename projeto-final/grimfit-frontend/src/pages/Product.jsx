@@ -124,6 +124,13 @@ export default function Product() {
           </button>
         </div>
         <div className="price">R$ {produto.preco}</div>
+        {produto.estilos && produto.estilos.length > 0 && (
+          <div className="tags-estilo">
+            {produto.estilos.map(e => (
+              <span key={e.id} className="tag-estilo">{e.nome}</span>
+            ))}
+          </div>
+        )}
         <p>{produto.descricao}</p>
 
         {variacoes.length > 0 ? (

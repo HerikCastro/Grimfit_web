@@ -2,17 +2,22 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import Img from './Img'
 
-export default function CategorySection({ title = 'Categorias', categories = [] }){
+export default function CategorySection({ title = 'Categorias', categories = [] }) {
+  if (categories.length === 0) return null
   return (
-    <section className="category-section">
-      <h2>{title}</h2>
+    <section style={{ margin: '32px 0' }}>
+      <h2 className="secao-titulo">{title}</h2>
       <div className="category-grid">
         {categories.map(c => (
-          <Link key={c.id} to={`/catalog?q=${encodeURIComponent(c.name)}`} className="category-tile">
+          <Link
+            key={c.id}
+            to={`/catalog?categoria_id=${c.id}`}
+            className="category-tile"
+          >
             <div className="cat-image">
-              <Img src={c.image} alt={c.name} />
+              <Img src={c.image || c.imagem_url} alt={c.name || c.nome} />
             </div>
-            <div className="cat-name">{c.name}</div>
+            <span>{c.name || c.nome}</span>
           </Link>
         ))}
       </div>

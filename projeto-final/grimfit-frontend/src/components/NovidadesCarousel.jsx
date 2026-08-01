@@ -1,81 +1,49 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import ProductCard from './ProductCard'
 
-export default function NovidadesCarousel({ items = [] }){
-  const listRef = useRef()
-  const [active, setActive] = useState(0)
-  const AUTOPLAY_MS = 3500
-  const autoplayRef = useRef(null)
+export default function NovidadesCarousel({ items = [] }) {
+  const listRef = useRef(null)
+  const [dot, setDot] = useState(0)
 
-  function scrollToIndex(idx){
-    const list = listRef.current
-    if (!list) return
-    const child = list.children[idx]
-    if (!child) return
-    list.scrollTo({ left: child.offsetLeft, behavior: 'smooth' })
-    setActive(idx)
+  function scrollDir(dir) {
+    if (!listRef.current) return
+    const w = listRef.current.offsetWidth
+    listRef.current.scrollBy({ left: dir * w * 0.8, behavior: 'smooth' })
   }
 
-  function prev(){
-    const next = Math.max(0, active - 1)
-    scrollToIndex(next)
-  }
-
-  function next(){
-    const nextIdx = Math.min(items.length - 1, active + 1)
-    scrollToIndex(nextIdx)
-  }
-
-  useEffect(()=>{
-    // autoplay
-    if (!items || items.length === 0) return
-    autoplayRef.current = setInterval(()=>{
-      setActive(a => {
-        const n = (a + 1) % items.length
-        scrollToIndex(n)
-        return n
-      })
-    }, AUTOPLAY_MS)
-    return ()=> clearInterval(autoplayRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[items])
-
-  // update active on manual scroll
-  useEffect(()=>{
-    const list = listRef.current
-    if (!list) return
-    function onScroll(){
-      const children = Array.from(list.children)
-      const left = list.scrollLeft
-      let idx = 0
-      for (let i=0;i<children.length;i++){
-        if (left >= children[i].offsetLeft - 10) idx = i
-      }
-      setActive(idx)
-    }
-    list.addEventListener('scroll', onScroll, { passive: true })
-    return ()=> list.removeEventListener('scroll', onScroll)
-  },[])
+  if (items.length === 0) return null
 
   return (
-    <section className="novidades-carousel" onMouseEnter={()=>clearInterval(autoplayRef.current)} onMouseLeave={()=>{ autoplayRef.current = setInterval(()=>{ setActive(a => { const n = (a + 1) % items.length; scrollToIndex(n); return n }) }, AUTOPLAY_MS) }}>
+    <section className="novidades-carousel">
       <div className="nov-header">
-        <h2>Novidades</h2>
-        <div className="nov-controls">
-          <button onClick={prev} className="nov-arrow">◀</button>
-          <button onClick={next} className="nov-arrow">▶</button>
+        <h2 className="secao-titulo">Novidades</h2>
+        <div>
+          <button className="nov-arrow" onClick={() => scrollDir(-1)} aria-label="Anterior">‹</button>
+          <button className="nov-arrow" onClick={() => scrollDir(1)} aria-label="Próxima">›</button>
         </div>
       </div>
-      <div className="nov-list" ref={listRef}>
-        {items.map((p, i) => (
-          <div className="nov-item" key={p.id}>
+      <div
+        className="nov-list"
+        ref={listRef}
+        onScroll={e => {
+          const el = e.currentTarget
+          setDot(Math.round(el.scrollLeft / (el.scrollWidth / items.length)))
+        }}
+      >
+        {items.map(p => (
+          <div key={p.id} className="nov-item">
             <ProductCard product={p} />
           </div>
         ))}
       </div>
-      <div className="nov-dots">
-        {items.map((_,i) => (
-          <button key={i} className={`nov-dot ${i===active? 'active':''}`} onClick={()=>scrollToIndex(i)} aria-label={`Go to slide ${i+1}`}></button>
+      <div className="nov-dots" aria-hidden="true">
+        {items.map((_, i) => (
+          <button key={i} className={`nov-dot ${dot === i ? 'active' : ''}`} onClick={() => {
+            if (!listRef.current) return
+            const w = listRef.current.scrollWidth / items.length
+            listRef.current.scrollTo({ left: w * i, behavior: 'smooth' })
+            setDot(i)
+          }} />
         ))}
       </div>
     </section>

@@ -62,8 +62,8 @@ export async function adminUpdateProduct(id, formData) {
   return res.data
 }
 
-export async function adminDeleteProduct(id) {
-  const res = await API.delete(`/api/products/${id}`)
+export async function adminDeleteProduct(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/products/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -88,6 +88,27 @@ export async function adminDeleteVariant(id) {
   return res.data
 }
 
+// ===== Estilos =====
+export async function getStyles() {
+  const res = await API.get('/api/styles')
+  return res.data
+}
+
+export async function adminCreateStyle(payload) {
+  const res = await API.post('/api/styles', payload)
+  return res.data
+}
+
+export async function adminUpdateStyle(id, payload) {
+  const res = await API.put(`/api/styles/${id}`, payload)
+  return res.data
+}
+
+export async function adminDeleteStyle(id) {
+  const res = await API.delete(`/api/styles/${id}`)
+  return res.data
+}
+
 // ===== Categorias =====
 export async function getCategories() {
   const res = await API.get('/api/categories')
@@ -108,8 +129,8 @@ export async function adminUpdateCategory(id, formData) {
   return res.data
 }
 
-export async function adminDeleteCategory(id) {
-  const res = await API.delete(`/api/categories/${id}`)
+export async function adminDeleteCategory(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/categories/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -133,8 +154,8 @@ export async function adminUpdateBrand(id, formData) {
   return res.data
 }
 
-export async function adminDeleteBrand(id) {
-  const res = await API.delete(`/api/brands/${id}`)
+export async function adminDeleteBrand(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/brands/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -297,13 +318,13 @@ export async function adminGetUsers() {
   return res.data
 }
 
-export async function adminUpdateUserType(id, tipo) {
-  const res = await API.put(`/api/admin/users/${id}`, { tipo })
+export async function adminUpdateUserType(id, tipo, confirmacaoSenha) {
+  const res = await API.put(`/api/admin/users/${id}`, { tipo, confirmacao_senha: confirmacaoSenha })
   return res.data
 }
 
-export async function adminDeleteUser(id) {
-  const res = await API.delete(`/api/admin/users/${id}`)
+export async function adminDeleteUser(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/admin/users/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -328,3 +349,43 @@ export async function adminUpdateTicketStatus(id, status) {
 }
 
 export default API
+
+// ===== Estilos =====
+export async function getEstilos() {
+  const res = await API.get('/api/estilos')
+  return res.data
+}
+
+export async function adminCreateEstilo(payload) {
+  const res = await API.post('/api/estilos', payload)
+  return res.data
+}
+
+export async function adminUpdateEstilo(id, payload) {
+  const res = await API.put(`/api/estilos/${id}`, payload)
+  return res.data
+}
+
+export async function adminDeleteEstilo(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/estilos/${id}`, {
+    data: { confirmacao_senha: confirmacaoSenha }
+  })
+  return res.data
+}
+
+// ===== Preferências do usuário =====
+export async function getPreferencias() {
+  const res = await API.get('/api/users/preferencias')
+  return res.data
+}
+
+export async function setPreferencias(estilo_ids) {
+  const res = await API.put('/api/users/preferencias', { estilo_ids })
+  return res.data
+}
+
+// ===== Confirmação de senha (ações críticas) =====
+export async function confirmarSenha(senha) {
+  const res = await API.post('/api/users/confirmar-senha', { senha })
+  return res.data
+}

@@ -8,26 +8,13 @@ export default function Header() {
   const { count } = useCart()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-
   const [menuAberto, setMenuAberto] = useState(false)
-  const [busca, setBusca] = useState('')
 
-  function alternarMenu() {
-    setMenuAberto((aberto) => !aberto)
-  }
+  function fecharMenu() { setMenuAberto(false) }
+  function alternarMenu() { setMenuAberto(a => !a) }
 
-  function fecharMenu() {
-    setMenuAberto(false)
-  }
-
-  function handleBuscar(evento) {
-    evento.preventDefault()
-    fecharMenu()
-    navigate(`/catalog?busca=${encodeURIComponent(busca.trim())}`)
-  }
-
-  function handleLogout(evento) {
-    evento.preventDefault()
+  function handleLogout(e) {
+    e.preventDefault()
     fecharMenu()
     logout()
     navigate('/')
@@ -35,56 +22,83 @@ export default function Header() {
 
   return (
     <header className="cabecalho">
+      {/* ──── mobile: linha topo ──── */}
       <div className="cabecalho-topo">
-        <div className="logo">
-          <Link to="/" onClick={fecharMenu}>
-            <img src={logo} alt="GRIMFIT" className="logo-imagem" />
-          </Link>
-        </div>
+        <nav className="nav-esquerda" aria-label="Navegação principal">
+          <ul className="nav-links">
+            <li><Link to="/catalog" onClick={fecharMenu}>Loja</Link></li>
+            <li><Link to="/catalog?aba=estilos" onClick={fecharMenu}>Estilos</Link></li>
+          </ul>
+        </nav>
 
+        <Link to="/" className="logo-centro" onClick={fecharMenu}>
+          <img src={logo} alt="GRIMFIT" className="logo-imagem" />
+        </Link>
+
+        <nav className="nav-direita" aria-label="Conta e carrinho">
+          <ul className="nav-links">
+            <li>
+              <Link to="/cart" onClick={fecharMenu} className="nav-carrinho">
+                <span aria-label={`Carrinho com ${count} itens`}>
+                  🛍 {count > 0 && <span className="badge-count">{count}</span>}
+                </span>
+              </Link>
+            </li>
+            {user ? (
+              <li className="nav-usuario">
+                <button
+                  className="nav-avatar"
+                  onClick={alternarMenu}
+                  aria-expanded={menuAberto}
+                  aria-label="Menu do usuário"
+                >
+                  {user.nome?.[0]?.toUpperCase() || 'U'}
+                </button>
+                {menuAberto && (
+                  <div className="nav-dropdown" role="menu">
+                    <span className="nav-dropdown-nome">{user.nome}</span>
+                    {user.tipo === 'admin' && (
+                      <Link to="/admin" onClick={fecharMenu} role="menuitem">Painel Admin</Link>
+                    )}
+                    <Link to="/perfil" onClick={fecharMenu} role="menuitem">Perfil</Link>
+                    <a href="#" onClick={handleLogout} role="menuitem">Sair</a>
+                  </div>
+                )}
+              </li>
+            ) : (
+              <li><Link to="/login" onClick={fecharMenu}>Entrar</Link></li>
+            )}
+          </ul>
+        </nav>
+
+        {/* hamburguer só no mobile */}
         <button
           className="botao-menu"
-          aria-controls="menu-principal"
+          aria-controls="menu-mobile"
           aria-expanded={menuAberto}
           onClick={alternarMenu}
         >
-          {menuAberto ? 'Fechar menu' : 'Abrir menu'}
+          <span className={`hamburger ${menuAberto ? 'aberto' : ''}`}>
+            <span /><span /><span />
+          </span>
         </button>
       </div>
 
-      <form className="busca-form" onSubmit={handleBuscar}>
-        <input
-          type="search"
-          placeholder="Buscar produto..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          aria-label="Buscar produto"
-        />
-        <button type="submit">Buscar</button>
-      </form>
-
-      <nav>
-        <ul id="menu-principal" className={`menu-lista ${menuAberto ? 'menu-aberto' : ''}`}>
-          <li><Link to="/catalog" onClick={fecharMenu}>Loja</Link></li>
-          <li><Link to="/catalog" onClick={fecharMenu}>Estilos</Link></li>
-          <li>
-            <Link to="/cart" onClick={fecharMenu}>
-              Carrinho{count > 0 ? ` (${count})` : ''}
-            </Link>
-          </li>
-          {user ? (
-            <>
-              {user.tipo === 'admin' && (
-                <li><Link to="/admin" onClick={fecharMenu}>Admin</Link></li>
-              )}
-              <li><Link to="/perfil" onClick={fecharMenu}>{user.nome || user.email}</Link></li>
-              <li><a href="#" onClick={handleLogout}>Sair</a></li>
-            </>
-          ) : (
-            <li><Link to="/login" onClick={fecharMenu}>Entrar</Link></li>
-          )}
-        </ul>
-      </nav>
+      {/* ──── menu mobile ──── */}
+      <div id="menu-mobile" className={`menu-mobile ${menuAberto ? 'menu-aberto' : ''}`}>
+        <Link to="/catalog" onClick={fecharMenu}>Loja</Link>
+        <Link to="/catalog?aba=estilos" onClick={fecharMenu}>Estilos</Link>
+        <Link to="/cart" onClick={fecharMenu}>Carrinho {count > 0 ? `(${count})` : ''}</Link>
+        {user ? (
+          <>
+            {user.tipo === 'admin' && <Link to="/admin" onClick={fecharMenu}>Painel Admin</Link>}
+            <Link to="/perfil" onClick={fecharMenu}>Perfil</Link>
+            <a href="#" onClick={handleLogout}>Sair</a>
+          </>
+        ) : (
+          <Link to="/login" onClick={fecharMenu}>Entrar</Link>
+        )}
+      </div>
     </header>
   )
 }

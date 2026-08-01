@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useToast } from '../components/ToastContext'
 import { useCart } from '../context/CartContext'
+import logo from '../assets/grimfit-logo.png'
 
-function validateEmail(email) {
+function validarEmail(email) {
   return /.+@.+\..+/.test(email)
 }
 
@@ -22,8 +23,8 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault()
     const novosErros = {}
-    if (!email) novosErros.email = 'Preencha o email'
-    else if (!validateEmail(email)) novosErros.email = 'Email inválido'
+    if (!email) novosErros.email = 'Preencha o e-mail'
+    else if (!validarEmail(email)) novosErros.email = 'E-mail inválido'
     if (!senha) novosErros.senha = 'Preencha a senha'
     setErros(novosErros)
     if (Object.keys(novosErros).length > 0) return
@@ -34,43 +35,80 @@ export default function Login() {
       if (res.ok) {
         await refreshCart()
         show('Login realizado', 'success')
-        navigate(location.state?.from?.pathname || '/')
+        const destino = location.state?.from?.pathname || '/'
+        // Se nunca definiu preferências, manda pro onboarding
+        if (!res.user?.preferencias_definidas) {
+          navigate('/onboarding')
+        } else {
+          navigate(destino)
+        }
       } else {
         show(res.message || 'Erro no login', 'error')
       }
     } catch (err) {
-      show(err?.response?.data?.message || 'Erro ao conectar com servidor', 'error')
+      show(err?.response?.data?.message || 'Erro ao conectar', 'error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="auth-page">
-      <h1>Entrar</h1>
-      <form onSubmit={handleSubmit} noValidate style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          disabled={loading}
-          className={erros.email ? 'campo-invalido' : ''}
-        />
-        {erros.email && <small className="erro-campo" role="alert" aria-live="polite">{erros.email}</small>}
+    <div className="auth-layout">
+      {/* painel visual esquerdo — some no mobile */}
+      <div className="auth-visual" aria-hidden="true">
+        <div className="auth-visual-conteudo">
+          <img src={logo} alt="" className="auth-logo-big" />
+          <p className="auth-slogan">Streetwear de verdade.<br />Sem filtro.</p>
+        </div>
+      </div>
 
-        <input
-          placeholder="Senha"
-          type="password"
-          value={senha}
-          onChange={e => setSenha(e.target.value)}
-          disabled={loading}
-          className={erros.senha ? 'campo-invalido' : ''}
-        />
-        {erros.senha && <small className="erro-campo" role="alert" aria-live="polite">{erros.senha}</small>}
+      {/* formulário direito */}
+      <div className="auth-painel">
+        <div className="auth-form-wrap">
+          <img src={logo} alt="GRIMFIT" className="auth-logo-mobile" />
+          <h1 className="auth-titulo">Entrar</h1>
+          <p className="muted auth-subtitulo">Bem-vindo de volta</p>
 
-        <button className="btn primary" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</button>
-      </form>
-      <div style={{ marginTop: 12 }}>Ainda não tem conta? <Link to="/register">Registrar</Link></div>
+          <form onSubmit={handleSubmit} noValidate className="auth-form">
+            <div className="form-campo">
+              <label htmlFor="email">E-mail</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={loading}
+                className={erros.email ? 'campo-invalido' : ''}
+                autoComplete="email"
+              />
+              {erros.email && <small className="erro-campo" role="alert" aria-live="polite">{erros.email}</small>}
+            </div>
+
+            <div className="form-campo">
+              <label htmlFor="senha">Senha</label>
+              <input
+                id="senha"
+                type="password"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                disabled={loading}
+                className={erros.senha ? 'campo-invalido' : ''}
+                autoComplete="current-password"
+              />
+              {erros.senha && <small className="erro-campo" role="alert" aria-live="polite">{erros.senha}</small>}
+            </div>
+
+            <button type="submit" className="btn primary full" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="auth-links">
+            <span className="muted">Não tem conta?</span>
+            <Link to="/register">Criar conta</Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

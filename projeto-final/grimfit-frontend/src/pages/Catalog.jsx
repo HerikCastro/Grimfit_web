@@ -2,108 +2,153 @@ import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import SkeletonCard from '../components/SkeletonCard'
-import { getProducts, getCategories, getBrands } from '../api'
+import Pagination from '../components/ui/Pagination'
+import { getProducts, getCategories, getBrands, getEstilos } from '../api'
+
+const ABAS_CATALOG = [
+  { chave: 'loja', rotulo: 'Loja' },
+  { chave: 'estilos', rotulo: 'Estilos' }
+]
 
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const [produtos, setProdutos] = useState([])
-  const [categorias, setCategorias] = useState([])
-  const [marcas, setMarcas] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [pagina, setPagina] = useState(1)
-
+  const aba = searchParams.get('aba') || 'loja'
   const busca = searchParams.get('busca') || ''
   const categoriaId = searchParams.get('categoria_id') || ''
   const marcaId = searchParams.get('marca_id') || ''
+  const estiloId = searchParams.get('estilo_id') || ''
   const ordenar = searchParams.get('ordenar') || 'recentes'
 
+  const [produtos, setProdutos] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [marcas, setMarcas] = useState([])
+  const [estilos, setEstilos] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const [temProxima, setTemProxima] = useState(false)
+
+  const LIMIT = 12
+
   useEffect(() => {
-    getCategories().then(setCategorias).catch(() => setCategorias([]))
-    getBrands().then(setMarcas).catch(() => setMarcas([]))
+    getCategories().then(setCategorias).catch(() => {})
+    getBrands().then(setMarcas).catch(() => {})
+    getEstilos().then(setEstilos).catch(() => {})
   }, [])
 
   useEffect(() => {
     buscarProdutos(1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busca, categoriaId, marcaId, ordenar])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca, categoriaId, marcaId, estiloId, ordenar, aba])
 
   async function buscarProdutos(page) {
     setLoading(true)
     try {
-      const params = { page, limit: 12, ordenar }
+      const params = { page, limit: LIMIT, ordenar }
       if (busca) params.busca = busca
       if (categoriaId) params.categoria_id = categoriaId
       if (marcaId) params.marca_id = marcaId
+      if (estiloId) params.estilo_id = estiloId
 
       const res = await getProducts(params)
-      setProdutos(res.produtos || [])
+      const lista = res.produtos || []
+      setProdutos(lista)
       setPagina(res.pagina || 1)
+      // Se retornou o limite cheio, provavelmente tem próxima página
+      setTemProxima(lista.length === LIMIT)
     } catch (e) {
       console.error(e)
       setProdutos([])
+      setTemProxima(false)
     } finally {
       setLoading(false)
     }
   }
 
-  function atualizarFiltro(chave, valor) {
-    const proximos = new URLSearchParams(searchParams)
-    if (valor) proximos.set(chave, valor)
-    else proximos.delete(chave)
-    setSearchParams(proximos)
+  function atualizar(chave, valor) {
+    const p = new URLSearchParams(searchParams)
+    if (valor) p.set(chave, valor)
+    else p.delete(chave)
+    setSearchParams(p)
   }
 
-  function handleBuscaSubmit(e) {
+  function handleBusca(e) {
     e.preventDefault()
-    const termo = e.target.elements.busca.value
-    atualizarFiltro('busca', termo)
+    atualizar('busca', e.target.elements.busca.value)
   }
 
   return (
     <div className="catalog-page">
-      <h1>Catálogo</h1>
+      {/* abas Loja / Estilos */}
+      <div className="catalog-abas" role="tablist">
+        {ABAS_CATALOG.map(a => (
+          <button
+            key={a.chave}
+            role="tab"
+            aria-selected={aba === a.chave}
+            className={`catalog-aba ${aba === a.chave ? 'ativa' : ''}`}
+            onClick={() => atualizar('aba', a.chave)}
+          >
+            {a.rotulo}
+          </button>
+        ))}
+      </div>
 
       <div className="filtros">
-        <form onSubmit={handleBuscaSubmit} className="filtro-busca">
-          <input name="busca" placeholder="Buscar produto" defaultValue={busca} />
+        <form onSubmit={handleBusca} className="filtro-busca">
+          <input name="busca" placeholder="Buscar produto..." defaultValue={busca} />
           <button type="submit">Buscar</button>
         </form>
 
-        <select value={categoriaId} onChange={e => atualizarFiltro('categoria_id', e.target.value)}>
-          <option value="">Todas as categorias</option>
-          {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-        </select>
+        {aba === 'estilos' ? (
+          <div className="filtro-estilos">
+            {estilos.map(e => (
+              <button
+                key={e.id}
+                type="button"
+                className={`estilo-chip ${estiloId === String(e.id) ? 'selecionado' : ''}`}
+                onClick={() => atualizar('estilo_id', estiloId === String(e.id) ? '' : String(e.id))}
+              >
+                {e.nome}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            <select value={categoriaId} onChange={e => atualizar('categoria_id', e.target.value)}>
+              <option value="">Todas as categorias</option>
+              {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+            <select value={marcaId} onChange={e => atualizar('marca_id', e.target.value)}>
+              <option value="">Todas as marcas</option>
+              {marcas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            </select>
+          </>
+        )}
 
-        <select value={marcaId} onChange={e => atualizarFiltro('marca_id', e.target.value)}>
-          <option value="">Todas as marcas</option>
-          {marcas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
-        </select>
-
-        <select value={ordenar} onChange={e => atualizarFiltro('ordenar', e.target.value)}>
+        <select value={ordenar} onChange={e => atualizar('ordenar', e.target.value)}>
           <option value="recentes">Mais recentes</option>
           <option value="preco_asc">Menor preço</option>
           <option value="preco_desc">Maior preço</option>
-          <option value="nome_asc">Nome (A-Z)</option>
+          <option value="nome_asc">A–Z</option>
         </select>
       </div>
 
       <div className="grid">
-        {loading ? (
-          Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={`s-${i}`} />)
-        ) : produtos.length > 0 ? (
-          produtos.map(p => <ProductCard key={p.id} product={p} />)
-        ) : (
-          <p className="muted">Nenhum produto encontrado.</p>
-        )}
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+          : produtos.length > 0
+            ? produtos.map(p => <ProductCard key={p.id} product={p} />)
+            : <p className="muted">Nenhum produto encontrado.</p>
+        }
       </div>
 
-      {produtos.length > 0 && (
-        <div className="pagination">
-          <button disabled={pagina <= 1} onClick={() => buscarProdutos(pagina - 1)}>Anterior</button>
-          <span>Página {pagina}</span>
-          <button onClick={() => buscarProdutos(pagina + 1)}>Próxima</button>
-        </div>
+      {!loading && produtos.length > 0 && (
+        <Pagination
+          pagina={pagina}
+          temProxima={temProxima}
+          onChange={p => buscarProdutos(p)}
+        />
       )}
     </div>
   )
