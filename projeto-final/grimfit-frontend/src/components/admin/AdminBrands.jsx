@@ -12,7 +12,7 @@ export default function AdminBrands() {
   const [preview, setPreview] = useState(null)
   const [editandoId, setEditandoId] = useState(null)
   const [salvando, setSalvando] = useState(false)
-  const [apagarId, setApagarId] = useState(null)
+  const [modal, setModal] = useState(null)
   const [loadingApagar, setLoadingApagar] = useState(false)
 
   useEffect(() => { carregar() }, [])
@@ -21,7 +21,15 @@ export default function AdminBrands() {
     try { setMarcas(await getBrands()) } catch (e) { console.error(e) }
   }
 
-  function resetForm() { setForm({ nome: '' }); setFile(null); setPreview(null); setEditandoId(null) }
+  function resetForm() {
+    setForm({ nome: '' }); setFile(null); setPreview(null); setEditandoId(null)
+  }
+
+  function handleFile(e) {
+    const f = e.target.files[0]
+    setFile(f)
+    setPreview(f ? URL.createObjectURL(f) : null)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -30,7 +38,7 @@ export default function AdminBrands() {
     try {
       const fd = new FormData()
       fd.append('nome', form.nome)
-      if (file) { const f = e.target.querySelector('[type=file]').files[0]; if (f) fd.append('imagem', f) }
+      if (file) fd.append('imagem', file)
       if (editandoId) await adminUpdateBrand(editandoId, fd)
       else await adminCreateBrand(fd)
       show('Marca salva', 'success')
@@ -41,34 +49,43 @@ export default function AdminBrands() {
     } finally { setSalvando(false) }
   }
 
-  function handleFile(e) {
-    const f = e.target.files[0]
-    setFile(f)
-    setPreview(f ? URL.createObjectURL(f) : null)
-  }
-
   async function handleApagar(senha) {
     setLoadingApagar(true)
     try {
-      await adminDeleteBrand(apagarId, senha)
+      await adminDeleteBrand(modal.id, senha, modal.force || false)
       show('Marca removida', 'success')
-      setApagarId(null)
+      setModal(null)
       await carregar()
     } catch (err) {
-      show(err?.response?.data?.message || 'Senha incorreta ou há produtos nessa marca', 'error')
+      const data = err?.response?.data
+      if (err?.response?.status === 409 && data?.pode_forcar) {
+        setModal({ id: modal.id, force: true, total: data.total, senhaJa: senha })
+        show(`Há ${data.total} produto(s) usando essa marca.`, 'error')
+      } else {
+        show(data?.message || 'Senha incorreta ou erro', 'error')
+      }
     } finally { setLoadingApagar(false) }
   }
 
   return (
     <div className="admin-secao">
-      {apagarId && (
+      {modal && !modal.force && (
         <ConfirmModal
-          mensagem="Apagar essa marca? Produtos vinculados ficam sem marca."
+          mensagem={`Apagar a marca "${marcas.find(m => m.id === modal.id)?.nome}"?`}
           onConfirm={handleApagar}
-          onCancel={() => setApagarId(null)}
+          onCancel={() => setModal(null)}
           loading={loadingApagar}
         />
       )}
+      {modal && modal.force && (
+        <ConfirmModal
+          mensagem={`Existem ${modal.total} produto(s) usando essa marca. Eles ficarão sem marca. Confirma?`}
+          onConfirm={handleApagar}
+          onCancel={() => setModal(null)}
+          loading={loadingApagar}
+        />
+      )}
+
       <h3>{editandoId ? 'Editar marca' : 'Nova marca'}</h3>
       <form onSubmit={handleSubmit} className="admin-form">
         <div className="form-campo">
@@ -85,6 +102,7 @@ export default function AdminBrands() {
           {editandoId && <button type="button" className="btn" onClick={resetForm}>Cancelar</button>}
         </div>
       </form>
+
       <h3>Marcas</h3>
       <div className="admin-cards-grid small">
         {marcas.map(m => (
@@ -92,8 +110,13 @@ export default function AdminBrands() {
             <Img src={m.imagem_url} alt={m.nome} className="admin-mini-img" />
             <span>{m.nome}</span>
             <div className="admin-mini-acoes">
-              <button className="btn" onClick={() => { setEditandoId(m.id); setForm({ nome: m.nome }); setPreview(m.imagem_url) }}>Editar</button>
-              <button className="btn danger" onClick={() => setApagarId(m.id)}>Apagar</button>
+              <button className="btn small" onClick={() => {
+                setEditandoId(m.id)
+                setForm({ nome: m.nome })
+                setPreview(m.imagem_url)
+                setFile(null)
+              }}>Editar</button>
+              <button className="btn danger small" onClick={() => setModal({ id: m.id, force: false })}>Apagar</button>
             </div>
           </div>
         ))}

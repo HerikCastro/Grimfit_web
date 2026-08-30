@@ -413,3 +413,52 @@ CREATE TABLE IF NOT EXISTS usuario_estilos_preferidos (
 );
 
 CREATE INDEX IF NOT EXISTS idx_usuario_estilos_estilo ON usuario_estilos_preferidos(estilo_id);
+
+-- ============================================================
+-- GRIMFIT — Estilos (tags de roupa), gênero e preferências
+-- Rode isso no banco que já existe (não recria nada)
+-- ============================================================
+
+-- Gênero do usuário (campo opcional, sem valor default forçado)
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS genero VARCHAR(20)
+  CHECK (genero IN ('masculino', 'feminino', 'prefiro_nao_informar', 'outro'));
+
+-- Marca se o usuário já passou pelo onboarding de preferências
+-- (pra decidir se mostra a tela de "escolha seus estilos" no
+-- primeiro login/cadastro ou não)
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS preferencias_definidas BOOLEAN DEFAULT FALSE;
+
+-- Estilos (Formal, Alfaiataria, Streetwear, Sportlife, Gótico, etc.)
+-- Cadastrados pelo admin ANTES de existir produto que use eles.
+CREATE TABLE IF NOT EXISTS estilos (
+  id SERIAL PRIMARY KEY,
+  nome VARCHAR(100) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Relação N:N — um produto pode ter um ou mais estilos
+CREATE TABLE IF NOT EXISTS produto_estilos (
+  produto_id INT NOT NULL,
+  estilo_id INT NOT NULL,
+
+  PRIMARY KEY (produto_id, estilo_id),
+
+  FOREIGN KEY (produto_id) REFERENCES produtos(id) ON DELETE CASCADE,
+  FOREIGN KEY (estilo_id) REFERENCES estilos(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_produto_estilos_estilo ON produto_estilos(estilo_id);
+
+-- Preferências de estilo do usuário (onboarding) — também N:N,
+-- mesma lógica: uma pessoa pode gostar de mais de um estilo
+CREATE TABLE IF NOT EXISTS usuario_estilos_preferidos (
+  usuario_id INT NOT NULL,
+  estilo_id INT NOT NULL,
+
+  PRIMARY KEY (usuario_id, estilo_id),
+
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (estilo_id) REFERENCES estilos(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuario_estilos_estilo ON usuario_estilos_preferidos(estilo_id);

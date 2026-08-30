@@ -15,12 +15,7 @@ export default function ProductCard({ product }) {
         <div className={`product-badge ${badge.toLowerCase()}`} aria-label={badge}>{badge}</div>
       )}
       <div className="product-image">
-        <Img
-          src={img}
-          alt={nome}
-          loading="lazy"
-          onLoad={e => { e.currentTarget.style.opacity = '1' }}
-        />
+        <Img src={img} alt={nome} loading="lazy" />
       </div>
       <div className="product-info">
         <div className="product-name">{nome}</div>

@@ -4,6 +4,7 @@ import ProductCard from '../components/ProductCard'
 import SkeletonCard from '../components/SkeletonCard'
 import Pagination from '../components/ui/Pagination'
 import { getProducts, getCategories, getBrands, getEstilos } from '../api'
+import { ensureArray } from '../utils/normalizeCollection'
 
 const ABAS_CATALOG = [
   { chave: 'loja', rotulo: 'Loja' },
@@ -31,9 +32,17 @@ export default function Catalog() {
   const LIMIT = 12
 
   useEffect(() => {
-    getCategories().then(setCategorias).catch(() => {})
-    getBrands().then(setMarcas).catch(() => {})
-    getEstilos().then(setEstilos).catch(() => {})
+    getCategories()
+      .then((data) => setCategorias(ensureArray(data)))
+      .catch(() => setCategorias([]))
+
+    getBrands()
+      .then((data) => setMarcas(ensureArray(data)))
+      .catch(() => setMarcas([]))
+
+    getEstilos()
+      .then((data) => setEstilos(ensureArray(data)))
+      .catch(() => setEstilos([]))
   }, [])
 
   useEffect(() => {
@@ -51,10 +60,9 @@ export default function Catalog() {
       if (estiloId) params.estilo_id = estiloId
 
       const res = await getProducts(params)
-      const lista = res.produtos || []
+      const lista = ensureArray(res?.produtos ?? res)
       setProdutos(lista)
-      setPagina(res.pagina || 1)
-      // Se retornou o limite cheio, provavelmente tem próxima página
+      setPagina(Number(res?.pagina || page) || 1)
       setTemProxima(lista.length === LIMIT)
     } catch (e) {
       console.error(e)
@@ -69,6 +77,17 @@ export default function Catalog() {
     const p = new URLSearchParams(searchParams)
     if (valor) p.set(chave, valor)
     else p.delete(chave)
+    setSearchParams(p)
+  }
+
+  function trocarAba(chave) {
+    const p = new URLSearchParams(searchParams)
+    p.set('aba', chave)
+    // Evita manter um filtro invisível ativo ao trocar de aba (ex: um
+    // estilo selecionado continuando a filtrar a Loja sem aparecer
+    // marcado em lugar nenhum na tela).
+    if (chave === 'loja') p.delete('estilo_id')
+    else p.delete('categoria_id')
     setSearchParams(p)
   }
 
@@ -87,7 +106,7 @@ export default function Catalog() {
             role="tab"
             aria-selected={aba === a.chave}
             className={`catalog-aba ${aba === a.chave ? 'ativa' : ''}`}
-            onClick={() => atualizar('aba', a.chave)}
+            onClick={() => trocarAba(a.chave)}
           >
             {a.rotulo}
           </button>

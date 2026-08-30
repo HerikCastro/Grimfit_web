@@ -9,27 +9,52 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null)
   const [ready, setReady] = useState(false)
 
-  // Recupera sessão salva ao abrir o site. Guardar o token no
-  // localStorage aqui é só pra manter o login entre recarregamentos
-  // de página — não tem relação com o problema de localStorage em
-  // artifacts sandboxed, isso é um app React de verdade.
+  // Recupera sessão salva ao abrir o site.
   useEffect(() => {
     async function restaurarSessao() {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (!raw) {
+        setReady(true)
+        return
+      }
+      let data
       try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (raw) {
-          const data = JSON.parse(raw)
-          if (data.token) {
-            setAuthToken(data.token)
-            setToken(data.token)
-            // Busca o perfil atualizado em vez de confiar cegamente
-            // no que ficou salvo (pode ter mudado tipo/nome no banco).
-            const perfil = await getMe()
-            setUser(perfil)
-          }
-        }
-      } catch (e) {
+        data = JSON.parse(raw)
+      } catch {
         localStorage.removeItem(STORAGE_KEY)
+        setReady(true)
+        return
+      }
+      if (!data?.token) {
+        setReady(true)
+        return
+      }
+
+      setAuthToken(data.token)
+      setToken(data.token)
+      try {
+        // Busca o perfil atualizado em vez de confiar cegamente no que
+        // ficou salvo (pode ter mudado tipo/nome no banco). Nunca deixa
+        // a tela de carregamento presa caso a API esteja lenta demais
+        // (ex.: back-end gratuito "acordando" depois de ficar inativo).
+        const perfil = await Promise.race([
+          getMe(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('TIMEOUT_AUTH')), 8000)
+          )
+        ])
+        setUser(perfil)
+      } catch (e) {
+        // Só derruba a sessão salva se o servidor realmente disse que o
+        // token é inválido/expirado (401). Se foi só timeout, erro de
+        // rede ou o servidor lento, mantém o token salvo — o usuário
+        // segue navegando como visitante e uma nova tentativa pode
+        // funcionar no próximo carregamento, sem forçar login de novo.
+        if (e?.response?.status === 401) {
+          localStorage.removeItem(STORAGE_KEY)
+          setAuthToken(null)
+          setToken(null)
+        }
       } finally {
         setReady(true)
       }

@@ -11,9 +11,13 @@ export default function Onboarding() {
   const [estilos, setEstilos] = useState([])
   const [selecionados, setSelecionados] = useState([])
   const [salvando, setSalvando] = useState(false)
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    getEstilos().then(setEstilos).catch(() => setEstilos([]))
+    getEstilos()
+      .then(setEstilos)
+      .catch(() => setEstilos([]))
+      .finally(() => setCarregando(false))
   }, [])
 
   function toggleEstilo(id) {
@@ -45,7 +49,13 @@ export default function Onboarding() {
       <h1>Qual é o seu estilo?</h1>
       <p className="muted">Escolha um ou mais estilos pra personalizarmos sua experiência. Você pode mudar depois no perfil.</p>
 
-      {estilos.length === 0 ? (
+      {carregando ? (
+        <div className="estilos-grid">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="estilo-chip estilo-chip-skeleton" aria-hidden="true" />
+          ))}
+        </div>
+      ) : estilos.length === 0 ? (
         <p className="muted">Nenhum estilo cadastrado ainda.</p>
       ) : (
         <div className="estilos-grid">

@@ -11,8 +11,23 @@ export default function OrderConfirmation() {
     getOrder(id).then(setPedido).catch(() => setErro(true))
   }, [id])
 
-  if (erro) return <div>Pedido não encontrado.</div>
-  if (!pedido) return <div>Carregando pedido...</div>
+  if (erro) {
+    return (
+      <div className="order-page">
+        <div className="estado-vazio">
+          <p>Não encontramos esse pedido.</p>
+          <Link to="/perfil" className="btn primary">Ver meus pedidos</Link>
+        </div>
+      </div>
+    )
+  }
+  if (!pedido) {
+    return (
+      <div className="order-page">
+        <div className="rota-carregando" aria-hidden="true" />
+      </div>
+    )
+  }
 
   return (
     <div className="order-page">

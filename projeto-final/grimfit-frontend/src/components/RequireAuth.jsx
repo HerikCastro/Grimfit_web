@@ -9,7 +9,9 @@ export default function RequireAuth({ children, adminOnly = false }) {
   // Espera confirmar se tem sessão salva antes de decidir redirecionar
   // — sem isso, dar F5 numa rota protegida jogaria pro login por um
   // instante mesmo com token válido.
-  if (!ready) return null
+  if (!ready) {
+    return <div className="rota-carregando" aria-hidden="true" />
+  }
 
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />
 

@@ -104,10 +104,18 @@ export async function adminUpdateStyle(id, payload) {
   return res.data
 }
 
-export async function adminDeleteStyle(id) {
-  const res = await API.delete(`/api/styles/${id}`)
+export async function adminDeleteStyle(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/styles/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
+
+
+
+// Aliases — AdminEstilos.jsx usa nomes em português; aponta para as funções em inglês
+export const getEstilos = getStyles
+export const adminCreateEstilo = adminCreateStyle
+export const adminUpdateEstilo = adminUpdateStyle
+export const adminDeleteEstilo = adminDeleteStyle
 
 // ===== Categorias =====
 export async function getCategories() {
@@ -129,8 +137,9 @@ export async function adminUpdateCategory(id, formData) {
   return res.data
 }
 
-export async function adminDeleteCategory(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/categories/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteCategory(id, confirmacaoSenha, force = false) {
+  const url = force ? `/api/categories/${id}?force=true` : `/api/categories/${id}`
+  const res = await API.delete(url, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -154,8 +163,9 @@ export async function adminUpdateBrand(id, formData) {
   return res.data
 }
 
-export async function adminDeleteBrand(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/brands/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteBrand(id, confirmacaoSenha, force = false) {
+  const url = force ? `/api/brands/${id}?force=true` : `/api/brands/${id}`
+  const res = await API.delete(url, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -350,11 +360,6 @@ export async function adminUpdateTicketStatus(id, status) {
 
 export default API
 
-// ===== Estilos =====
-export async function getEstilos() {
-  const res = await API.get('/api/styles')
-  return res.data
-}
 
 export async function adminCreateEstilo(payload) {
   const res = await API.post('/api/styles', payload)

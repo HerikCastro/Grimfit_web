@@ -53,7 +53,7 @@ export default function AdminVariants({ produtoId }) {
         <input placeholder="Tamanho (ex: 42, M, G)" value={form.tamanho} onChange={e => setForm({ ...form, tamanho: e.target.value })} />
         <input placeholder="Cor" value={form.cor} onChange={e => setForm({ ...form, cor: e.target.value })} />
         <input placeholder="Estoque" type="number" min="0" value={form.estoque} onChange={e => setForm({ ...form, estoque: e.target.value })} required />
-        <button type="submit">+ Adicionar variação</button>
+        <button type="submit" className="btn primary small">+ Adicionar variação</button>
       </form>
 
       {variacoes.length === 0 ? (
@@ -75,7 +75,7 @@ export default function AdminVariants({ produtoId }) {
                     className="input-estoque"
                   />
                 </td>
-                <td><button onClick={() => apagar(v.id)}>Apagar</button></td>
+                <td><button className="btn danger small" onClick={() => apagar(v.id)}>Apagar</button></td>
               </tr>
             ))}
           </tbody>

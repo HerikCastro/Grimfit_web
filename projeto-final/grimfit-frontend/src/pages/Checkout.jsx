@@ -14,6 +14,12 @@ export default function Checkout() {
   const navigate = useNavigate()
   const { show } = useToast()
 
+  const formatCurrency = (value) => {
+    const number = Number(value ?? 0)
+    if (!Number.isFinite(number)) return 'R$ 0,00'
+    return `R$ ${number.toFixed(2).replace('.', ',')}`
+  }
+
   const [enderecos, setEnderecos] = useState([])
   const [enderecoId, setEnderecoId] = useState('')
   const [novoEndereco, setNovoEndereco] = useState(ENDERECO_VAZIO)
@@ -94,7 +100,7 @@ export default function Checkout() {
                   {end.apelido ? `${end.apelido} — ` : ''}{end.rua}, {end.numero} — {end.bairro}, {end.cidade}/{end.estado}
                 </label>
               ))}
-              <button type="button" onClick={() => setMostrarForm(true)}>+ Novo endereço</button>
+              <button type="button" className="btn btn-add-endereco" onClick={() => setMostrarForm(true)}>+ Novo endereço</button>
             </div>
           )}
 
@@ -109,9 +115,9 @@ export default function Checkout() {
               <input placeholder="Cidade" required value={novoEndereco.cidade} onChange={e => setNovoEndereco({ ...novoEndereco, cidade: e.target.value })} />
               <input placeholder="Estado" required value={novoEndereco.estado} onChange={e => setNovoEndereco({ ...novoEndereco, estado: e.target.value })} />
               <div className="form-endereco-acoes">
-                <button type="submit">Salvar endereço</button>
+                <button type="submit" className="btn primary">Salvar endereço</button>
                 {enderecos.length > 0 && (
-                  <button type="button" onClick={() => setMostrarForm(false)}>Cancelar</button>
+                  <button type="button" className="btn" onClick={() => setMostrarForm(false)}>Cancelar</button>
                 )}
               </div>
             </form>
@@ -123,10 +129,12 @@ export default function Checkout() {
           {items.map(item => (
             <div key={item.id} className="resumo-item">
               <span>{item.nome} x{item.quantidade}</span>
-              <span>R$ {(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+              <span>{formatCurrency(item.preco * item.quantidade)}</span>
             </div>
           ))}
-          <div className="resumo-total">Total: R$ {total.toFixed(2).replace('.', ',')}</div>
+          <div className="summary-line"><span>Subtotal</span><strong>{formatCurrency(total)}</strong></div>
+          <div className="summary-line"><span>Frete</span><strong>Grátis</strong></div>
+          <div className="resumo-total">Total: {formatCurrency(total)}</div>
           <button className="btn primary" onClick={handleFinalizar} disabled={processando}>
             {processando ? 'Processando...' : 'Confirmar pedido'}
           </button>

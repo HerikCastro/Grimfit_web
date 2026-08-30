@@ -59,11 +59,25 @@ export default function AdminCoupons() {
     <div className="admin-secao">
       <h3>Novo cupom</h3>
       <form onSubmit={handleSubmit} className="admin-form">
-        <input placeholder="Código (ex: PROMO10)" value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} required />
-        <input placeholder="Desconto (%)" type="number" min="1" value={form.desconto} onChange={e => setForm({ ...form, desconto: e.target.value })} required />
-        <label>Validade (opcional)</label>
-        <input type="date" value={form.validade} onChange={e => setForm({ ...form, validade: e.target.value })} />
-        <button type="submit" disabled={salvando}>Criar cupom</button>
+        <div className="admin-form-row">
+          <div className="form-campo">
+            <label htmlFor="cup-codigo">Código</label>
+            <input id="cup-codigo" placeholder="ex: PROMO10" value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value.toUpperCase() })} required />
+          </div>
+          <div className="form-campo">
+            <label htmlFor="cup-desconto">Desconto (%)</label>
+            <input id="cup-desconto" placeholder="10" type="number" min="1" max="100" value={form.desconto} onChange={e => setForm({ ...form, desconto: e.target.value })} required />
+          </div>
+          <div className="form-campo">
+            <label htmlFor="cup-validade">Validade (opcional)</label>
+            <input id="cup-validade" type="date" value={form.validade} onChange={e => setForm({ ...form, validade: e.target.value })} />
+          </div>
+        </div>
+        <div className="admin-form-acoes">
+          <button type="submit" className="btn primary" disabled={salvando}>
+            {salvando ? 'Criando...' : 'Criar cupom'}
+          </button>
+        </div>
       </form>
 
       <h3>Cupons cadastrados</h3>
@@ -75,10 +89,16 @@ export default function AdminCoupons() {
               <tr key={c.id}>
                 <td>{c.codigo}</td>
                 <td>{c.desconto}%</td>
-                <td>{c.ativo ? 'Sim' : 'Não'}</td>
                 <td>
-                  <button onClick={() => alternarAtivo(c)}>{c.ativo ? 'Desativar' : 'Ativar'}</button>
-                  <button onClick={() => apagar(c.id)}>Apagar</button>
+                  <span className={`status-pill ${c.ativo ? 'status-ok' : 'status-off'}`}>
+                    {c.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </td>
+                <td className="admin-table-acoes">
+                  <button className="btn small" onClick={() => alternarAtivo(c)}>
+                    {c.ativo ? 'Desativar' : 'Ativar'}
+                  </button>
+                  <button className="btn danger small" onClick={() => apagar(c.id)}>Apagar</button>
                 </td>
               </tr>
             ))}

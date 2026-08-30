@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import LoadingScreen from './components/LoadingScreen'
+import ErrorBoundary from './components/ErrorBoundary'
 import { CartProvider } from './context/CartContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import RequireAuth from './components/RequireAuth'
@@ -32,19 +33,21 @@ function AppContent() {
     <div className={`app-root ${semFundo ? '' : 'fundo-marca'}`}>
       <Header />
       <main className="container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-          <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-          <Route path="/order/:id" element={<RequireAuth><OrderConfirmation /></RequireAuth>} />
-          <Route path="/perfil" element={<RequireAuth><Profile /></RequireAuth>} />
-          <Route path="/admin" element={<RequireAuth adminOnly><Admin /></RequireAuth>} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+            <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+            <Route path="/order/:id" element={<RequireAuth><OrderConfirmation /></RequireAuth>} />
+            <Route path="/perfil" element={<RequireAuth><Profile /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAuth adminOnly><Admin /></RequireAuth>} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       <Footer />
     </div>
@@ -53,12 +56,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <ToastProvider>
-          <AppContent />
-        </ToastProvider>
-      </CartProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <CartProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }

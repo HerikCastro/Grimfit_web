@@ -85,6 +85,21 @@ export default function Profile() {
         </div>
       </div>
 
+      <div className="profile-stats">
+        <div className="profile-stat">
+          <span>Pedidos</span>
+          <strong>{pedidos.length}</strong>
+        </div>
+        <div className="profile-stat">
+          <span>Preferências</span>
+          <strong>{preferencias.length}</strong>
+        </div>
+        <div className="profile-stat">
+          <span>Plano</span>
+          <strong>{user?.tipo === 'admin' ? 'Admin' : 'Cliente'}</strong>
+        </div>
+      </div>
+
       <div className="profile-abas" role="tablist">
         {ABAS.map(a => (
           <button

@@ -104,7 +104,7 @@ export default function Product() {
     }
   }
 
-  if (!produto) return <div>Carregando produto...</div>
+  if (!produto) return <div className="rota-carregando" aria-hidden="true" />
 
   const variacaoEscolhida = variacoes.find(v => String(v.id) === variacaoId)
   const semEstoque = variacaoEscolhida && variacaoEscolhida.estoque <= 0
@@ -113,7 +113,7 @@ export default function Product() {
     <div className="product-page">
       <div className="gallery">
         <div className="main-image">
-          <Img src={produto.imagem_url} alt={produto.nome} onLoad={e => { e.currentTarget.style.opacity = '1' }} />
+          <Img src={produto.imagem_url} alt={produto.nome} />
         </div>
       </div>
       <div className="details">
@@ -123,7 +123,7 @@ export default function Product() {
             {favoritado ? '★ Favoritado' : '☆ Favoritar'}
           </button>
         </div>
-        <div className="price">R$ {produto.preco}</div>
+        <div className="product-price">R$ {produto.preco}</div>
         {produto.estilos && produto.estilos.length > 0 && (
           <div className="tags-estilo">
             {produto.estilos.map(e => (
@@ -131,10 +131,11 @@ export default function Product() {
             ))}
           </div>
         )}
-        <p>{produto.descricao}</p>
+        <p className="product-description">{produto.descricao}</p>
 
-        {variacoes.length > 0 ? (
-          <div className="selectors">
+        <div className="purchase-panel">
+          {variacoes.length > 0 ? (
+            <div className="selectors">
             <label htmlFor="variacao">Tamanho / Cor</label>
             <select id="variacao" value={variacaoId} onChange={e => setVariacaoId(e.target.value)}>
               {variacoes.map(v => (
@@ -152,18 +153,22 @@ export default function Product() {
               value={quantidade}
               onChange={e => setQuantidade(Math.max(1, Number(e.target.value)))}
             />
-          </div>
-        ) : (
-          <p className="muted">Nenhuma variação (tamanho/cor) cadastrada pra esse produto ainda.</p>
-        )}
+            </div>
+          ) : (
+            <p className="muted">Nenhuma variação (tamanho/cor) cadastrada pra esse produto ainda.</p>
+          )}
 
-        <button
-          className="btn primary"
-          onClick={handleAdd}
-          disabled={adicionando || variacoes.length === 0 || semEstoque}
-        >
-          {adicionando ? 'Adicionando...' : 'Adicionar ao carrinho'}
-        </button>
+          <button
+            className="btn primary full"
+            onClick={handleAdd}
+            disabled={adicionando || variacoes.length === 0 || semEstoque}
+          >
+            {adicionando ? 'Adicionando...' : 'Adicionar ao carrinho'}
+          </button>
+          <span className={`purchase-status ${semEstoque ? 'purchase-status-alert' : ''}`}>
+            {semEstoque ? 'Variação sem estoque' : 'Compra segura • disponibilidade atualizada'}
+          </span>
+        </div>
 
         <section className="secao-avaliacoes">
           <h3>Avaliações</h3>

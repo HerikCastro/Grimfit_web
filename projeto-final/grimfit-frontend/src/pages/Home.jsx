@@ -5,7 +5,9 @@ import BrandsCarousel from '../components/BrandsCarousel'
 import FeaturedSection from '../components/FeaturedSection'
 import CategorySection from '../components/CategorySection'
 import NovidadesCarousel from '../components/NovidadesCarousel'
+import SkeletonCard from '../components/SkeletonCard'
 import { getProducts, getCategories, getBrands } from '../api'
+import { ensureArray } from '../utils/normalizeCollection'
 
 export default function Home() {
   const [produtos, setProdutos] = useState([])
@@ -22,11 +24,15 @@ export default function Home() {
           getCategories(),
           getBrands()
         ])
-        setProdutos(resProdutos.produtos || [])
-        setCategorias(resCategorias || [])
-        setMarcas(resMarcas || [])
+
+        setProdutos(ensureArray(resProdutos?.produtos ?? resProdutos))
+        setCategorias(ensureArray(resCategorias))
+        setMarcas(ensureArray(resMarcas))
       } catch (err) {
         console.error('Erro ao carregar a home', err)
+        setProdutos([])
+        setCategorias([])
+        setMarcas([])
       } finally {
         setCarregando(false)
       }
@@ -41,6 +47,11 @@ export default function Home() {
 
   return (
     <div className="home-page">
+      <div className="home-intro-strip">
+        <span>GRIMFIT</span>
+        <span>STREETWEAR / GOTH / SK8 / SPORTLIFE</span>
+        <span>EXPLORE O DROP ↓</span>
+      </div>
       {destaque ? (
         <Hero product={{
           id: destaque.id,
@@ -49,7 +60,15 @@ export default function Home() {
           price: destaque.preco,
           image: destaque.imagem_url
         }} />
-      ) : !carregando && (
+      ) : carregando ? (
+        <section className="hero hero-skeleton" aria-hidden="true">
+          <div className="hero-content">
+            <div className="skeleton-line" style={{ width: '40%', height: 16 }} />
+            <div className="skeleton-line" style={{ width: '70%', height: 34, margin: '14px 0' }} />
+            <div className="skeleton-line" style={{ width: '30%', height: 40 }} />
+          </div>
+        </section>
+      ) : (
         <section className="hero hero-vazio">
           <div className="hero-content">
             <h1>GRIMFIT</h1>
@@ -61,7 +80,11 @@ export default function Home() {
       <div className="container">
         {produtos.length > 0 ? (
           <NovidadesCarousel items={produtos} />
-        ) : !carregando && (
+        ) : carregando ? (
+          <div className="grid" aria-hidden="true">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : (
           <section className="secao-vazia">
             <h2>Novidades</h2>
             <p className="muted">Nenhum produto cadastrado ainda.</p>
