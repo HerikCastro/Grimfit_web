@@ -12,8 +12,7 @@ export default function AdminCategories() {
   const [preview, setPreview] = useState(null)
   const [editandoId, setEditandoId] = useState(null)
   const [salvando, setSalvando] = useState(false)
-  // modal pode ser null | { id, force: false } | { id, force: true, total, senhaJa }
-  const [modal, setModal] = useState(null)
+  const [apagarId, setApagarId] = useState(null)
   const [loadingApagar, setLoadingApagar] = useState(false)
 
   useEffect(() => { carregar() }, [])
@@ -22,9 +21,7 @@ export default function AdminCategories() {
     try { setCategorias(await getCategories()) } catch (e) { console.error(e) }
   }
 
-  function resetForm() {
-    setForm({ nome: '' }); setFile(null); setPreview(null); setEditandoId(null)
-  }
+  function resetForm() { setForm({ nome: '' }); setFile(null); setPreview(null); setEditandoId(null) }
 
   function handleFile(e) {
     const f = e.target.files[0]
@@ -53,42 +50,25 @@ export default function AdminCategories() {
   async function handleApagar(senha) {
     setLoadingApagar(true)
     try {
-      await adminDeleteCategory(modal.id, senha, modal.force || false)
+      await adminDeleteCategory(apagarId, senha)
       show('Categoria removida', 'success')
-      setModal(null)
+      setApagarId(null)
       await carregar()
     } catch (err) {
-      const data = err?.response?.data
-      // Backend retornou 409 com pode_forcar=true: há produtos vinculados
-      if (err?.response?.status === 409 && data?.pode_forcar) {
-        // Guarda a senha já digitada e abre o modal de força
-        setModal({ id: modal.id, force: true, total: data.total, senhaJa: senha })
-        show(`Há ${data.total} produto(s) nessa categoria. Confirme abaixo pra apagar mesmo assim.`, 'error')
-      } else {
-        show(data?.message || 'Senha incorreta ou erro', 'error')
-      }
+      show(err?.response?.data?.message || 'Senha incorreta ou há produtos nessa categoria', 'error')
     } finally { setLoadingApagar(false) }
   }
 
   return (
     <div className="admin-secao">
-      {modal && !modal.force && (
+      {apagarId && (
         <ConfirmModal
-          mensagem={`Apagar a categoria "${categorias.find(c => c.id === modal.id)?.nome}"? Produtos vinculados podem ficar sem categoria.`}
+          mensagem="Apagar essa categoria? Produtos vinculados ficam sem categoria."
           onConfirm={handleApagar}
-          onCancel={() => setModal(null)}
+          onCancel={() => setApagarId(null)}
           loading={loadingApagar}
         />
       )}
-      {modal && modal.force && (
-        <ConfirmModal
-          mensagem={`Existem ${modal.total} produto(s) nessa categoria. Eles ficarão sem categoria. Tem certeza que quer apagar mesmo assim?`}
-          onConfirm={(senha) => handleApagar(senha)}
-          onCancel={() => setModal(null)}
-          loading={loadingApagar}
-        />
-      )}
-
       <h3>{editandoId ? 'Editar categoria' : 'Nova categoria'}</h3>
       <form onSubmit={handleSubmit} className="admin-form">
         <div className="form-campo">
@@ -105,7 +85,6 @@ export default function AdminCategories() {
           {editandoId && <button type="button" className="btn" onClick={resetForm}>Cancelar</button>}
         </div>
       </form>
-
       <h3>Categorias</h3>
       <div className="admin-cards-grid small">
         {categorias.map(c => (
@@ -113,13 +92,8 @@ export default function AdminCategories() {
             <Img src={c.imagem_url} alt={c.nome} className="admin-mini-img" />
             <span>{c.nome}</span>
             <div className="admin-mini-acoes">
-              <button className="btn small" onClick={() => {
-                setEditandoId(c.id)
-                setForm({ nome: c.nome })
-                setPreview(c.imagem_url)
-                setFile(null)
-              }}>Editar</button>
-              <button className="btn danger small" onClick={() => setModal({ id: c.id, force: false })}>Apagar</button>
+              <button className="btn" onClick={() => { setEditandoId(c.id); setForm({ nome: c.nome }); setPreview(c.imagem_url) }}>Editar</button>
+              <button className="btn danger" onClick={() => setApagarId(c.id)}>Apagar</button>
             </div>
           </div>
         ))}

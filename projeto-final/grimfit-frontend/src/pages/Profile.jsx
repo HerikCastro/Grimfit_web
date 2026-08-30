@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { updateProfile, changePassword, getMyOrders, getPreferencias, setPreferencias as salvarPreferencias, getEstilos } from '../api'
+import { updateProfile, changePassword, getMyOrders, getPreferences, setPreferences as salvarPreferencias, getStyles } from '../api'
 import { useToast } from '../components/ToastContext'
 import { Link } from 'react-router-dom'
 
@@ -32,8 +32,8 @@ export default function Profile() {
   useEffect(() => {
     if (user) setForm({ nome: user.nome || '', telefone: user.telefone || '', genero: user.genero || '' })
     getMyOrders().then(setPedidos).catch(() => {})
-    getEstilos().then(setEstilos).catch(() => {})
-    getPreferencias().then(r => setPreferencias_(r.estilos?.map(e => e.id) || [])).catch(() => {})
+    getStyles().then(setEstilos).catch(() => {})
+    getPreferences().then(r => setPreferencias_(r.estilos?.map(e => e.id) || [])).catch(() => {})
   }, [user])
 
   async function handleSalvarDados(e) {

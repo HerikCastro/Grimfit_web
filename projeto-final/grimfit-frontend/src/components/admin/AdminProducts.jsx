@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, getCategories, getBrands, getEstilos } from '../../api'
+import { getProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, getCategories, getBrands, getStyles } from '../../api'
 import { useToast } from '../ToastContext'
 import Img from '../Img'
 import AdminVariants from './AdminVariants'
@@ -27,7 +27,7 @@ export default function AdminProducts() {
     carregar()
     getCategories().then(setCategorias).catch(() => {})
     getBrands().then(setMarcas).catch(() => {})
-    getEstilos().then(setEstilos).catch(() => {})
+    getStyles().then(setEstilos).catch(() => {})
   }, [])
 
   async function carregar() {

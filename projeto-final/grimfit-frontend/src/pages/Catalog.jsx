@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import SkeletonCard from '../components/SkeletonCard'
 import Pagination from '../components/ui/Pagination'
-import { getProducts, getCategories, getBrands, getEstilos } from '../api'
+import { getProducts, getCategories, getBrands, getStyles } from '../api'
 import { ensureArray } from '../utils/normalizeCollection'
 
 const ABAS_CATALOG = [
@@ -40,7 +40,7 @@ export default function Catalog() {
       .then((data) => setMarcas(ensureArray(data)))
       .catch(() => setMarcas([]))
 
-    getEstilos()
+    getStyles()
       .then((data) => setEstilos(ensureArray(data)))
       .catch(() => setEstilos([]))
   }, [])

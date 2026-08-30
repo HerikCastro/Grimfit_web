@@ -104,18 +104,27 @@ export async function adminUpdateStyle(id, payload) {
   return res.data
 }
 
-export async function adminDeleteStyle(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/styles/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteStyle(id, confirmPassword) {
+  const res = await API.delete(`/api/styles/${id}`, { data: { confirmacao_senha: confirmPassword } })
   return res.data
 }
 
+// ===== Preferences =====
+export async function getPreferences() {
+  const res = await API.get('/api/users/preferences')
+  return res.data
+}
 
+export async function setPreferences(styleIds) {
+  const res = await API.put('/api/users/preferences', { estilo_ids: styleIds })
+  return res.data
+}
 
-// Aliases — AdminEstilos.jsx usa nomes em português; aponta para as funções em inglês
-export const getEstilos = getStyles
-export const adminCreateEstilo = adminCreateStyle
-export const adminUpdateEstilo = adminUpdateStyle
-export const adminDeleteEstilo = adminDeleteStyle
+// ===== Password Confirmation =====
+export async function confirmPassword(password) {
+  const res = await API.post('/api/users/confirm-password', { senha: password })
+  return res.data
+}
 
 // ===== Categorias =====
 export async function getCategories() {
@@ -137,9 +146,8 @@ export async function adminUpdateCategory(id, formData) {
   return res.data
 }
 
-export async function adminDeleteCategory(id, confirmacaoSenha, force = false) {
-  const url = force ? `/api/categories/${id}?force=true` : `/api/categories/${id}`
-  const res = await API.delete(url, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteCategory(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/categories/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -163,9 +171,8 @@ export async function adminUpdateBrand(id, formData) {
   return res.data
 }
 
-export async function adminDeleteBrand(id, confirmacaoSenha, force = false) {
-  const url = force ? `/api/brands/${id}?force=true` : `/api/brands/${id}`
-  const res = await API.delete(url, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteBrand(id, confirmacaoSenha) {
+  const res = await API.delete(`/api/brands/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
@@ -359,38 +366,3 @@ export async function adminUpdateTicketStatus(id, status) {
 }
 
 export default API
-
-
-export async function adminCreateEstilo(payload) {
-  const res = await API.post('/api/styles', payload)
-  return res.data
-}
-
-export async function adminUpdateEstilo(id, payload) {
-  const res = await API.put(`/api/styles/${id}`, payload)
-  return res.data
-}
-
-export async function adminDeleteEstilo(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/styles/${id}`, {
-    data: { confirmacao_senha: confirmacaoSenha }
-  })
-  return res.data
-}
-
-// ===== Preferências do usuário =====
-export async function getPreferencias() {
-  const res = await API.get('/api/users/preferences')
-  return res.data
-}
-
-export async function setPreferencias(estilo_ids) {
-  const res = await API.put('/api/users/preferences', { estilo_ids })
-  return res.data
-}
-
-// ===== Confirmação de senha (ações críticas) =====
-export async function confirmarSenha(senha) {
-  const res = await API.post('/api/users/confirm-password', { senha })
-  return res.data
-}

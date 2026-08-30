@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { getEstilos, setPreferencias } from '../api'
+import { getStyles, setPreferences } from '../api'
 import { useToast } from '../components/ToastContext'
 import logo from '../assets/grimfit-logo.png'
 
@@ -14,7 +14,7 @@ export default function Onboarding() {
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    getEstilos()
+    getStyles()
       .then(setEstilos)
       .catch(() => setEstilos([]))
       .finally(() => setCarregando(false))
@@ -29,7 +29,7 @@ export default function Onboarding() {
   async function handleContinuar() {
     setSalvando(true)
     try {
-      await setPreferencias(selecionados)
+      await setPreferences(selecionados)
       show('Preferências salvas!', 'success')
       navigate(location.state?.from || '/')
     } catch (err) {
