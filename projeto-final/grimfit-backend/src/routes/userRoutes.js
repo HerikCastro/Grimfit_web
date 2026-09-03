@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
+const upload = require("../uploads/multer");
 
 const {
   profile,
@@ -15,7 +16,7 @@ const {
 
 router.get("/profile", auth, profile);
 
-router.put("/profile", auth, updateProfile);
+router.put("/profile", auth, upload.single("foto"), updateProfile);
 
 router.put("/password", auth, changePassword);
 

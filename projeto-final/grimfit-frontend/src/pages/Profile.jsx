@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { updateProfile, changePassword, getMyOrders, getPreferences, setPreferences as salvarPreferencias, getStyles } from '../api'
 import { useToast } from '../components/ToastContext'
 import { Link } from 'react-router-dom'
+import Img from '../components/Img'
 
 const GENEROS = [
   { value: 'masculino', label: 'Masculino' },
@@ -28,6 +29,8 @@ export default function Profile() {
   const [preferencias, setPreferencias_] = useState([])
   const [abaAtiva, setAbaAtiva] = useState('dados')
   const [salvando, setSalvando] = useState(false)
+  const [foto, setFoto] = useState(null)
+  const [previewFoto, setPreviewFoto] = useState(null)
 
   useEffect(() => {
     if (user) setForm({ nome: user.nome || '', email: user.email || '', telefone: user.telefone || '', genero: user.genero || '' })
@@ -40,12 +43,28 @@ export default function Profile() {
     e.preventDefault()
     setSalvando(true)
     try {
-      const res = await updateProfile(form)
+      const dados = new FormData()
+      dados.append('nome', form.nome)
+      dados.append('email', form.email)
+      dados.append('telefone', form.telefone)
+      dados.append('genero', form.genero)
+      if (foto) dados.append('foto', foto)
+
+      const res = await updateProfile(dados)
       if (res.user) updateUser(res.user)
+      setFoto(null)
+      setPreviewFoto(null)
       show('Perfil atualizado', 'success')
     } catch (err) {
       show(err?.response?.data?.message || 'Erro ao atualizar', 'error')
     } finally { setSalvando(false) }
+  }
+
+  function handleFoto(e) {
+    const arquivo = e.target.files?.[0]
+    if (!arquivo) return
+    setFoto(arquivo)
+    setPreviewFoto(URL.createObjectURL(arquivo))
   }
 
   async function handleSenha(e) {
@@ -78,7 +97,13 @@ export default function Profile() {
   return (
     <div className="profile-page">
       <div className="profile-topo">
-        <div className="profile-avatar">{user?.nome?.[0]?.toUpperCase() || 'U'}</div>
+        <div className="profile-avatar">
+          {previewFoto || user?.foto_url ? (
+            <Img src={previewFoto || user.foto_url} alt="Foto de perfil" />
+          ) : (
+            user?.nome?.[0]?.toUpperCase() || 'U'
+          )}
+        </div>
         <div>
           <h1 className="profile-nome">{user?.nome}</h1>
           <span className="profile-email muted">{user?.email}</span>
@@ -121,6 +146,17 @@ export default function Profile() {
 
         {abaAtiva === 'dados' && (
           <form onSubmit={handleSalvarDados} className="profile-form">
+            <div className="form-campo">
+              <label htmlFor="foto-perfil">Foto de perfil</label>
+              <input
+                id="foto-perfil"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFoto}
+                className="input-file"
+              />
+              {previewFoto && <Img src={previewFoto} alt="Preview da foto de perfil" className="profile-foto-preview" />}
+            </div>
             <div className="form-campo">
               <label htmlFor="email">E-mail</label>
               <input id="email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />

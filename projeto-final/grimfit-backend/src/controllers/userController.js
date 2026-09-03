@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const pool = require("../config/db");
+const uploadImage = require("../utils/uploadImage");
 
 exports.profile = async (req, res) => {
 
@@ -13,6 +14,7 @@ exports.profile = async (req, res) => {
         nome,
         email,
         telefone,
+        foto_url,
         tipo,
         genero,
         preferencias_definidas
@@ -65,6 +67,10 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
+    const fotoUrl = req.file
+      ? await uploadImage(req.file.buffer, "usuarios")
+      : null;
+
     const { rows: usuarios } = await pool.query(
       `
       UPDATE usuarios
@@ -72,11 +78,12 @@ exports.updateProfile = async (req, res) => {
         nome = $1,
         telefone = $2,
         email = $3,
-        genero = COALESCE($4, genero)
-      WHERE id = $5
-      RETURNING id, nome, email, telefone, tipo, genero, preferencias_definidas
+        genero = COALESCE($4, genero),
+        foto_url = COALESCE($5, foto_url)
+      WHERE id = $6
+      RETURNING id, nome, email, telefone, foto_url, tipo, genero, preferencias_definidas
       `,
-      [nome.trim(), emailNormalizado, telefone || null, genero || null, req.user.id]
+      [nome.trim(), emailNormalizado, telefone || null, genero || null, fotoUrl, req.user.id]
     );
 
     if (usuarios.length === 0) {

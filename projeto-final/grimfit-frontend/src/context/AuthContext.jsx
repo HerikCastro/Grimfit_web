@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
       setUser(res.user)
       setToken(res.token)
       setAuthToken(res.token)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token, user: res.user }))
     }
     return res
   }
@@ -85,7 +85,13 @@ export function AuthProvider({ children }) {
   }
 
   function updateUser(updates) {
-    setUser(current => current ? { ...current, ...updates } : current)
+    setUser(current => {
+      if (!current) return current
+      const updated = { ...current, ...updates }
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, user: updated }))
+      return updated
+    })
   }
 
   return (

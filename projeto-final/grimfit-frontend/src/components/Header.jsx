@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/grimfit-logo.png'
+import Img from './Img'
 
 export default function Header() {
   const { count } = useCart()
@@ -56,7 +57,7 @@ export default function Header() {
                   aria-expanded={menuAberto}
                   aria-label="Menu do usuário"
                 >
-                  {user.nome?.[0]?.toUpperCase() || 'U'}
+                  {user.foto_url ? <Img src={user.foto_url} alt="Foto de perfil" /> : (user.nome?.[0]?.toUpperCase() || 'U')}
                 </button>
                 {menuAberto && (
                   <div className="nav-dropdown" role="menu">

@@ -12,6 +12,7 @@ CREATE TABLE usuarios (
   email VARCHAR(150) NOT NULL UNIQUE,
   senha VARCHAR(255) NOT NULL,
   telefone VARCHAR(20),
+  foto_url TEXT,
 
   tipo VARCHAR(20) DEFAULT 'cliente'
     CHECK (tipo IN ('cliente', 'admin', 'suporte')),
@@ -267,6 +268,7 @@ FOR EACH ROW EXECUTE FUNCTION atualizar_updated_at();
 -- 1) Imagem em categorias e marcas (pré-requisito pro Cloudinary)
 ALTER TABLE categorias ADD COLUMN IF NOT EXISTS imagem_url TEXT;
 ALTER TABLE marcas ADD COLUMN IF NOT EXISTS imagem_url TEXT;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_url TEXT;
 
 -- 2) Índices nas colunas de FK que não tinham nenhum
 -- (Postgres indexa o lado "pai" da FK automaticamente, mas nunca

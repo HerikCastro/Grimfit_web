@@ -27,7 +27,9 @@ export async function getMe() {
 }
 
 export async function updateProfile(payload) {
-  const res = await API.put('/api/users/profile', payload)
+  const res = await API.put('/api/users/profile', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
   return res.data
 }
 
