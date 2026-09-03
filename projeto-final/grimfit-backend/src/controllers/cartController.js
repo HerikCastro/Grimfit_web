@@ -50,8 +50,9 @@ exports.addCartItem = async (req, res) => {
       variacao_id,
       quantidade
     } = req.body;
+    const quantidadeSolicitada = Number(quantidade);
 
-    if (!variacao_id || !quantidade || quantidade < 1) {
+    if (!variacao_id || !Number.isInteger(quantidadeSolicitada) || quantidadeSolicitada < 1) {
       return res.status(400).json({
         message: "variacao_id e quantidade (>=1) são obrigatórios"
       });
@@ -109,17 +110,29 @@ exports.addCartItem = async (req, res) => {
 
     if (existente.length > 0) {
 
+      if (existente[0].quantidade + quantidadeSolicitada > variacao[0].estoque) {
+        return res.status(409).json({
+          message: "Quantidade solicitada maior que o estoque disponível"
+        });
+      }
+
       await pool.query(
         `
         UPDATE itens_carrinho
         SET quantidade = quantidade + $1
         WHERE id = $2
         `,
-        [quantidade, existente[0].id]
+        [quantidadeSolicitada, existente[0].id]
       );
 
       return res.json({
         message: "Quantidade atualizada no carrinho"
+      });
+    }
+
+    if (quantidadeSolicitada > variacao[0].estoque) {
+      return res.status(409).json({
+        message: "Quantidade solicitada maior que o estoque disponível"
       });
     }
 
@@ -129,7 +142,7 @@ exports.addCartItem = async (req, res) => {
       (
         carrinho_id,
         variacao_id,
-        quantidade
+        quantidadeSolicitada
       )
       VALUES ($1, $2, $3)
       `,
@@ -161,8 +174,9 @@ exports.updateCartItem = async (req, res) => {
   try {
 
     const { quantidade } = req.body;
+    const quantidadeSolicitada = Number(quantidade);
 
-    if (!quantidade || quantidade < 1) {
+    if (!Number.isInteger(quantidadeSolicitada) || quantidadeSolicitada < 1) {
       return res.status(400).json({
         message: "quantidade precisa ser no mínimo 1"
       });
@@ -172,9 +186,10 @@ exports.updateCartItem = async (req, res) => {
     // antes de deixar editar (evita alterar item de outra pessoa).
     const { rows: item } = await pool.query(
       `
-      SELECT ic.id
+      SELECT ic.id, vp.estoque
       FROM itens_carrinho ic
       JOIN carrinhos c ON c.id = ic.carrinho_id
+      JOIN variacoes_produto vp ON vp.id = ic.variacao_id
       WHERE ic.id = $1
       AND c.usuario_id = $2
       `,
@@ -187,13 +202,19 @@ exports.updateCartItem = async (req, res) => {
       });
     }
 
+    if (quantidadeSolicitada > item[0].estoque) {
+      return res.status(409).json({
+        message: "Quantidade solicitada maior que o estoque disponível"
+      });
+    }
+
     await pool.query(
       `
       UPDATE itens_carrinho
       SET quantidade = $1
       WHERE id = $2
       `,
-      [quantidade, req.params.id]
+      [quantidadeSolicitada, req.params.id]
     );
 
     return res.json({

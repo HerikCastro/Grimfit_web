@@ -1475,6 +1475,20 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 .admin-form-variante input { flex: 1; min-width: 80px; padding: 8px 10px; font-size: 13px }
 .input-estoque { max-width: 80px }
 
+.variant-selector-group { display: flex; flex-direction: column; gap: 6px }
+.variant-selector-label { font-size: 13px; font-weight: 700 }
+.variant-pills { display: flex; flex-wrap: wrap; gap: 8px }
+.variant-pill {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px 12px;
+}
+.variant-pill.selecionado { border-color: var(--accent); background: var(--accent); color: #fff }
+.variant-pill:disabled { cursor: not-allowed; opacity: 0.4; text-decoration: line-through }
+
 /* tabela de variantes */
 .admin-table {
   width: 100%;

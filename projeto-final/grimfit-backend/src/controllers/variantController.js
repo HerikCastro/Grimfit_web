@@ -76,6 +76,17 @@ exports.updateVariant = async (req, res) => {
   try {
 
     const { tamanho, cor, estoque } = req.body;
+    let estoqueAtualizado = estoque;
+
+    if (estoque !== undefined && estoque !== null) {
+      estoqueAtualizado = Number(estoque);
+
+      if (!Number.isInteger(estoqueAtualizado) || estoqueAtualizado < 0) {
+        return res.status(400).json({
+          message: "estoque precisa ser um número inteiro maior ou igual a zero"
+        });
+      }
+    }
 
     const { rowCount } = await pool.query(
       `
@@ -86,7 +97,7 @@ exports.updateVariant = async (req, res) => {
         estoque = COALESCE($3, estoque)
       WHERE id = $4
       `,
-      [tamanho, cor, estoque, req.params.id]
+      [tamanho, cor, estoqueAtualizado, req.params.id]
     );
 
     if (rowCount === 0) {

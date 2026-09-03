@@ -15,7 +15,8 @@ export default function Product() {
 
   const [produto, setProduto] = useState(null)
   const [variacoes, setVariacoes] = useState([])
-  const [variacaoId, setVariacaoId] = useState('')
+  const [corSelecionada, setCorSelecionada] = useState('')
+  const [tamanhoSelecionado, setTamanhoSelecionado] = useState('')
   const [quantidade, setQuantidade] = useState(1)
   const [adicionando, setAdicionando] = useState(false)
   const [favoritado, setFavoritado] = useState(false)
@@ -30,7 +31,8 @@ export default function Product() {
 
         const v = await getVariants(id)
         setVariacoes(v || [])
-        if (v && v.length > 0) setVariacaoId(String(v[0].id))
+        setCorSelecionada('')
+        setTamanhoSelecionado('')
 
         const r = await getReviews(id)
         setReviews(r || [])
@@ -52,13 +54,13 @@ export default function Product() {
       navigate('/login')
       return
     }
-    if (!variacaoId) {
+    if (!variacaoEscolhida || semEstoque) {
       show('Escolha tamanho/cor disponível', 'error')
       return
     }
     setAdicionando(true)
     try {
-      await addItem(Number(variacaoId), quantidade)
+      await addItem(Number(variacaoEscolhida.id), quantidade)
       show('Adicionado ao carrinho', 'success')
     } catch (e) {
       console.error(e)
@@ -106,8 +108,28 @@ export default function Product() {
 
   if (!produto) return <div className="rota-carregando" aria-hidden="true" />
 
-  const variacaoEscolhida = variacoes.find(v => String(v.id) === variacaoId)
-  const semEstoque = variacaoEscolhida && variacaoEscolhida.estoque <= 0
+  const cores = [...new Set(variacoes.map(v => v.cor || '-'))]
+  const tamanhos = [...new Set(variacoes.map(v => v.tamanho || '-'))]
+  const variacaoEscolhida = variacoes.find(v =>
+    (v.cor || '-') === corSelecionada && (v.tamanho || '-') === tamanhoSelecionado
+  )
+  const semEstoque = !variacaoEscolhida || variacaoEscolhida.estoque <= 0
+
+  function corDisponivel(cor) {
+    return variacoes.some(v =>
+      (v.cor || '-') === cor &&
+      (!tamanhoSelecionado || (v.tamanho || '-') === tamanhoSelecionado) &&
+      v.estoque > 0
+    )
+  }
+
+  function tamanhoDisponivel(tamanho) {
+    return variacoes.some(v =>
+      (v.tamanho || '-') === tamanho &&
+      (!corSelecionada || (v.cor || '-') === corSelecionada) &&
+      v.estoque > 0
+    )
+  }
 
   return (
     <div className="product-page">
@@ -136,14 +158,41 @@ export default function Product() {
         <div className="purchase-panel">
           {variacoes.length > 0 ? (
             <div className="selectors">
-            <label htmlFor="variacao">Tamanho / Cor</label>
-            <select id="variacao" value={variacaoId} onChange={e => setVariacaoId(e.target.value)}>
-              {variacoes.map(v => (
-                <option key={v.id} value={v.id} disabled={v.estoque <= 0}>
-                  {v.tamanho || '-'} / {v.cor || '-'} {v.estoque <= 0 ? '(sem estoque)' : ''}
-                </option>
-              ))}
-            </select>
+            <div className="variant-selector-group">
+              <span className="variant-selector-label">Cor</span>
+              <div className="variant-pills" role="group" aria-label="Seleção de cor">
+                {cores.map(cor => (
+                  <button
+                    key={cor}
+                    type="button"
+                    className={`variant-pill ${corSelecionada === cor ? 'selecionado' : ''}`}
+                    onClick={() => setCorSelecionada(cor)}
+                    disabled={!corDisponivel(cor)}
+                    aria-pressed={corSelecionada === cor}
+                  >
+                    {cor}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="variant-selector-group">
+              <span className="variant-selector-label">Tamanho</span>
+              <div className="variant-pills" role="group" aria-label="Seleção de tamanho">
+                {tamanhos.map(tamanho => (
+                  <button
+                    key={tamanho}
+                    type="button"
+                    className={`variant-pill ${tamanhoSelecionado === tamanho ? 'selecionado' : ''}`}
+                    onClick={() => setTamanhoSelecionado(tamanho)}
+                    disabled={!tamanhoDisponivel(tamanho)}
+                    aria-pressed={tamanhoSelecionado === tamanho}
+                  >
+                    {tamanho}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <label htmlFor="quantidade">Quantidade</label>
             <input
@@ -161,12 +210,12 @@ export default function Product() {
           <button
             className="btn primary full"
             onClick={handleAdd}
-            disabled={adicionando || variacoes.length === 0 || semEstoque}
+            disabled={adicionando || variacoes.length === 0 || !variacaoEscolhida || semEstoque}
           >
             {adicionando ? 'Adicionando...' : 'Adicionar ao carrinho'}
           </button>
           <span className={`purchase-status ${semEstoque ? 'purchase-status-alert' : ''}`}>
-            {semEstoque ? 'Variação sem estoque' : 'Compra segura • disponibilidade atualizada'}
+            {semEstoque ? 'Escolha uma combinação disponível' : 'Compra segura • disponibilidade atualizada'}
           </span>
         </div>
 
