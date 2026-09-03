@@ -116,7 +116,7 @@ export async function getPreferences() {
 }
 
 export async function setPreferences(styleIds) {
-  const res = await API.put('/api/users/preferences', { estilo_ids: styleIds })
+  const res = await API.put('/api/users/preferences', { style_ids: styleIds })
   return res.data
 }
 
