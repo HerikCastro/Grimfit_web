@@ -18,24 +18,35 @@ export default function Home() {
   useEffect(() => {
     async function carregarTudo() {
       setCarregando(true)
-      try {
-        const [resProdutos, resCategorias, resMarcas] = await Promise.all([
-          getProducts({ ordenar: 'recentes', limit: 12 }),
-          getCategories(),
-          getBrands()
-        ])
+      const carregarProdutos = getProducts({ ordenar: 'recentes', limit: 12 })
+        .then(resProdutos => {
+          setProdutos(ensureArray(resProdutos?.produtos ?? resProdutos))
+        })
+        .catch(err => {
+          console.error('Erro ao carregar produtos', err)
+          setProdutos([])
+        })
 
-        setProdutos(ensureArray(resProdutos?.produtos ?? resProdutos))
-        setCategorias(ensureArray(resCategorias))
-        setMarcas(ensureArray(resMarcas))
-      } catch (err) {
-        console.error('Erro ao carregar a home', err)
-        setProdutos([])
-        setCategorias([])
-        setMarcas([])
-      } finally {
-        setCarregando(false)
-      }
+      const carregarCategorias = getCategories()
+        .then(resCategorias => {
+          setCategorias(ensureArray(resCategorias))
+        })
+        .catch(err => {
+          console.error('Erro ao carregar categorias', err)
+          setCategorias([])
+        })
+
+      const carregarMarcas = getBrands()
+        .then(resMarcas => {
+          setMarcas(ensureArray(resMarcas))
+        })
+        .catch(err => {
+          console.error('Erro ao carregar marcas', err)
+          setMarcas([])
+        })
+
+      await Promise.all([carregarProdutos, carregarCategorias, carregarMarcas])
+      setCarregando(false)
     }
     carregarTudo()
   }, [])

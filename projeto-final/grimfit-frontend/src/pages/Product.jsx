@@ -171,7 +171,13 @@ export default function Product() {
         </div>
 
         <section className="secao-avaliacoes">
-          <h3>Avaliações</h3>
+          <div className="avaliacoes-cabecalho">
+            <div>
+              <span className="section-kicker">Experiência real</span>
+              <h3>Avaliações</h3>
+            </div>
+            {reviews.length > 0 && <span className="avaliacoes-total">{reviews.length} {reviews.length === 1 ? 'avaliação' : 'avaliações'}</span>}
+          </div>
           {reviews.length === 0 ? (
             <p className="muted">Nenhuma avaliação ainda.</p>
           ) : (
@@ -187,16 +193,20 @@ export default function Product() {
 
           {user && (
             <form onSubmit={handleEnviarAvaliacao} className="form-avaliacao">
-              <label htmlFor="nota">Nota</label>
-              <select id="nota" value={novaAvaliacao.nota} onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota: Number(e.target.value) })}>
-                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
+              <div className="avaliacao-form-topo">
+                <label htmlFor="nota">Sua nota</label>
+                <select id="nota" value={novaAvaliacao.nota} onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota: Number(e.target.value) })}>
+                  {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} {n === 1 ? 'estrela' : 'estrelas'}</option>)}
+                </select>
+              </div>
               <textarea
+                className="ui-textarea"
                 placeholder="Comentário (opcional)"
                 value={novaAvaliacao.comentario}
                 onChange={e => setNovaAvaliacao({ ...novaAvaliacao, comentario: e.target.value })}
               />
-              <button type="submit" className="btn">Enviar avaliação</button>
+              <p className="avaliacao-nota">Disponível após a entrega do pedido.</p>
+              <button type="submit" className="btn primary">Enviar avaliação</button>
             </form>
           )}
         </section>

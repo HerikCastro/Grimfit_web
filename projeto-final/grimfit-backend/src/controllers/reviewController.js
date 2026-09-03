@@ -16,6 +16,22 @@ exports.createReview = async (req, res) => {
       });
     }
 
+    const { rows: compras } = await pool.query(`
+      SELECT 1
+      FROM itens_pedido ip
+      JOIN pedidos p ON p.id = ip.pedido_id
+      WHERE p.usuario_id = $1
+      AND ip.produto_id = $2
+      AND p.status = 'entregue'
+      LIMIT 1
+    `, [req.user.id, produto_id]);
+
+    if (compras.length === 0) {
+      return res.status(403).json({
+        message: "Você só pode avaliar produtos de pedidos entregues"
+      });
+    }
+
     await pool.query(`
       INSERT INTO avaliacoes
       (
