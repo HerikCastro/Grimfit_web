@@ -142,14 +142,14 @@ exports.addCartItem = async (req, res) => {
       (
         carrinho_id,
         variacao_id,
-        quantidadeSolicitada
+        quantidade
       )
       VALUES ($1, $2, $3)
       `,
       [
         cart[0].id,
         variacao_id,
-        quantidade
+        quantidadeSolicitada
       ]
     );
 
