@@ -18,10 +18,10 @@ const STATUS_LABEL = {
 }
 
 export default function Profile() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const { show } = useToast()
 
-  const [form, setForm] = useState({ nome: '', telefone: '', genero: '' })
+  const [form, setForm] = useState({ nome: '', email: '', telefone: '', genero: '' })
   const [senhas, setSenhas] = useState({ senha_atual: '', nova_senha: '' })
   const [pedidos, setPedidos] = useState([])
   const [estilos, setEstilos] = useState([])
@@ -30,7 +30,7 @@ export default function Profile() {
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
-    if (user) setForm({ nome: user.nome || '', telefone: user.telefone || '', genero: user.genero || '' })
+    if (user) setForm({ nome: user.nome || '', email: user.email || '', telefone: user.telefone || '', genero: user.genero || '' })
     getMyOrders().then(setPedidos).catch(() => {})
     getStyles().then(setEstilos).catch(() => {})
     getPreferences().then(r => setPreferencias_(r.estilos?.map(e => e.id) || [])).catch(() => {})
@@ -40,9 +40,12 @@ export default function Profile() {
     e.preventDefault()
     setSalvando(true)
     try {
-      await updateProfile(form)
+      const res = await updateProfile(form)
+      if (res.user) updateUser(res.user)
       show('Perfil atualizado', 'success')
-    } catch { show('Erro ao atualizar', 'error') } finally { setSalvando(false) }
+    } catch (err) {
+      show(err?.response?.data?.message || 'Erro ao atualizar', 'error')
+    } finally { setSalvando(false) }
   }
 
   async function handleSenha(e) {
@@ -119,8 +122,8 @@ export default function Profile() {
         {abaAtiva === 'dados' && (
           <form onSubmit={handleSalvarDados} className="profile-form">
             <div className="form-campo">
-              <label>E-mail</label>
-              <input value={user?.email} disabled />
+              <label htmlFor="email">E-mail</label>
+              <input id="email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
             </div>
             <div className="form-campo">
               <label htmlFor="nome">Nome</label>

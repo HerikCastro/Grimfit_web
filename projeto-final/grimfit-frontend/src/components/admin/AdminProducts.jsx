@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { getProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, getCategories, getBrands, getStyles } from '../../api'
+import { getProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, getCategories, getBrands, getStyles, getVariants } from '../../api'
 import { useToast } from '../ToastContext'
 import Img from '../Img'
 import AdminVariants from './AdminVariants'
 import ConfirmModal from '../ui/ConfirmModal'
 import Textarea from '../ui/Textarea'
 
-const VAZIO = { nome: '', descricao: '', preco: '', categoria_id: '', marca_id: '', estilo_ids: [] }
+const VAZIO = { nome: '', descricao: '', preco: '', categoria_id: '', marca_id: '', estilo_ids: [], variantes: [] }
 
 export default function AdminProducts() {
   const { show } = useToast()
@@ -41,6 +41,21 @@ export default function AdminProducts() {
     setForm(VAZIO); setFile(null); setPreview(null); setEditandoId(null)
   }
 
+  function adicionarVariante() {
+    setForm(f => ({ ...f, variantes: [...f.variantes, { tamanho: '', cor: '', estoque: 0 }] }))
+  }
+
+  function atualizarVariante(index, campo, valor) {
+    setForm(f => ({
+      ...f,
+      variantes: f.variantes.map((variante, i) => i === index ? { ...variante, [campo]: valor } : variante)
+    }))
+  }
+
+  function removerVariante(index) {
+    setForm(f => ({ ...f, variantes: f.variantes.filter((_, i) => i !== index) }))
+  }
+
   function handleFile(e) {
     const f = e.target.files[0]
     setFile(f)
@@ -69,6 +84,12 @@ export default function AdminProducts() {
       if (form.categoria_id) fd.append('categoria_id', form.categoria_id)
       if (form.marca_id) fd.append('marca_id', form.marca_id)
       form.estilo_ids.forEach(id => fd.append('estilo_ids[]', id))
+      fd.append('variantes', JSON.stringify(form.variantes.map(v => ({
+        ...(v.id ? { id: v.id } : {}),
+        tamanho: v.tamanho,
+        cor: v.cor,
+        estoque: Number(v.estoque)
+      }))))
       if (file) fd.append('imagem', file)
       if (editandoId) await adminUpdateProduct(editandoId, fd)
       else await adminCreateProduct(fd)
@@ -82,7 +103,7 @@ export default function AdminProducts() {
     }
   }
 
-  function editar(p) {
+  async function editar(p) {
     setEditandoId(p.id)
     setForm({
       nome: p.nome || '',
@@ -90,10 +111,15 @@ export default function AdminProducts() {
       preco: String(p.preco || ''),
       categoria_id: p.categoria_id || '',
       marca_id: p.marca_id || '',
-      estilo_ids: p.estilos?.map(e => e.id) || []
+      estilo_ids: p.estilos?.map(e => e.id) || [],
+      variantes: []
     })
     setPreview(p.imagem_url)
     setFile(null)
+    try {
+      const variantes = await getVariants(p.id)
+      setForm(f => ({ ...f, variantes: variantes || [] }))
+    } catch (e) { console.error(e) }
   }
 
   async function handleApagar(senha) {
@@ -186,6 +212,36 @@ export default function AdminProducts() {
           <label>Imagem {editandoId ? '(opcional — só se quiser trocar)' : <span className="campo-obrigatorio">*</span>}</label>
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} className="input-file" />
           {preview && <Img src={preview} alt="preview" className="admin-preview" />}
+        </div>
+
+        <div className="form-campo">
+          <label>Variantes (Cor, Tamanho e Estoque)</label>
+          <div className="admin-form-variantes">
+            {form.variantes.map((variante, index) => (
+              <div className="admin-form-variante" key={variante.id || index}>
+                <input
+                  placeholder="Tamanho"
+                  value={variante.tamanho || ''}
+                  onChange={e => atualizarVariante(index, 'tamanho', e.target.value)}
+                />
+                <input
+                  placeholder="Cor"
+                  value={variante.cor || ''}
+                  onChange={e => atualizarVariante(index, 'cor', e.target.value)}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="Estoque"
+                  value={variante.estoque ?? 0}
+                  onChange={e => atualizarVariante(index, 'estoque', e.target.value)}
+                />
+                <button type="button" className="btn danger small" onClick={() => removerVariante(index)}>Remover</button>
+              </div>
+            ))}
+            <button type="button" className="btn" onClick={adicionarVariante}>+ Adicionar variante</button>
+          </div>
         </div>
 
         <div className="admin-form-acoes">

@@ -128,7 +128,8 @@ exports.login = async (req, res) => {
         nome: user.nome,
         email: user.email,
         telefone: user.telefone,
-        tipo: user.tipo
+        tipo: user.tipo,
+        preferencias_definidas: user.preferencias_definidas
       }
     });
 

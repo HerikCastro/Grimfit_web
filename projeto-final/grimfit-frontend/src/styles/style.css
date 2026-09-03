@@ -1473,6 +1473,8 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 .admin-variantes { background: var(--surface-2); border-radius: var(--radius); padding: 14px }
 .admin-form-variante { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px }
 .admin-form-variante input { flex: 1; min-width: 80px; padding: 8px 10px; font-size: 13px }
+.admin-form-variantes { display: flex; flex-direction: column; gap: 8px }
+.admin-form-variantes > .admin-form-variante { margin: 0; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm) }
 .input-estoque { max-width: 80px }
 
 .variant-selector-group { display: flex; flex-direction: column; gap: 6px }

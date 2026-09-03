@@ -44,11 +44,18 @@ exports.updateProfile = async (req, res) => {
 
   try {
 
-    const { nome, telefone, genero } = req.body;
+    const { nome, email, telefone, genero } = req.body;
+    const emailNormalizado = email?.trim().toLowerCase();
 
     if (!nome || !nome.trim()) {
       return res.status(400).json({
         message: "Nome é obrigatório"
+      });
+    }
+
+    if (!emailNormalizado || !/.+@.+\..+/.test(emailNormalizado)) {
+      return res.status(400).json({
+        message: "E-mail válido é obrigatório"
       });
     }
 
@@ -58,23 +65,34 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    await pool.query(
+    const { rows: usuarios } = await pool.query(
       `
       UPDATE usuarios
       SET
         nome = $1,
         telefone = $2,
-        genero = COALESCE($3, genero)
-      WHERE id = $4
+        email = $3,
+        genero = COALESCE($4, genero)
+      WHERE id = $5
+      RETURNING id, nome, email, telefone, tipo, genero, preferencias_definidas
       `,
-      [nome, telefone, genero, req.user.id]
+      [nome.trim(), emailNormalizado, telefone || null, genero || null, req.user.id]
     );
 
+    if (usuarios.length === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
     return res.json({
-      message: "Perfil atualizado"
+      message: "Perfil atualizado",
+      user: usuarios[0]
     });
 
   } catch (error) {
+
+    if (error.code === "23505") {
+      return res.status(409).json({ message: "E-mail já cadastrado" });
+    }
 
     console.log(error);
 

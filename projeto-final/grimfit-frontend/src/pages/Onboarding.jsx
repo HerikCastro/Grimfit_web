@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { getStyles, setPreferences } from '../api'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ToastContext'
 import logo from '../assets/grimfit-logo.png'
 
@@ -8,6 +9,7 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const location = useLocation()
   const { show } = useToast()
+  const { updateUser } = useAuth()
   const [estilos, setEstilos] = useState([])
   const [selecionados, setSelecionados] = useState([])
   const [salvando, setSalvando] = useState(false)
@@ -27,9 +29,14 @@ export default function Onboarding() {
   }
 
   async function handleContinuar() {
+    if (selecionados.length === 0) {
+      show('Selecione pelo menos um estilo ou clique em Pular por agora', 'error')
+      return
+    }
     setSalvando(true)
     try {
       await setPreferences(selecionados)
+      updateUser({ preferencias_definidas: true })
       show('Preferências salvas!', 'success')
       navigate(location.state?.from || '/')
     } catch (err) {
@@ -39,8 +46,17 @@ export default function Onboarding() {
     }
   }
 
-  function handlePular() {
-    navigate(location.state?.from || '/')
+  async function handlePular() {
+    setSalvando(true)
+    try {
+      await setPreferences([])
+      updateUser({ preferencias_definidas: true })
+      navigate(location.state?.from || '/')
+    } catch {
+      show('Erro ao concluir onboarding', 'error')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
@@ -77,7 +93,7 @@ export default function Onboarding() {
         <button className="btn primary" onClick={handleContinuar} disabled={salvando}>
           {salvando ? 'Salvando...' : 'Continuar'}
         </button>
-        <button className="btn" onClick={handlePular}>Pular por agora</button>
+        <button className="btn" onClick={handlePular} disabled={salvando}>Pular por agora</button>
       </div>
     </div>
   )

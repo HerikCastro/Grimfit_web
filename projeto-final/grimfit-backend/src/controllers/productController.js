@@ -1,6 +1,51 @@
 const pool = require("../config/db");
 const uploadImage = require("../utils/uploadImage");
 
+function lerVariantes(body) {
+  if (body.variantes === undefined) return undefined;
+
+  const variantes = typeof body.variantes === "string"
+    ? JSON.parse(body.variantes)
+    : body.variantes;
+
+  if (!Array.isArray(variantes)) {
+    throw new Error("variantes precisa ser uma lista");
+  }
+
+  return variantes.map((variante) => {
+    const estoque = Number(variante.estoque);
+    if (!Number.isInteger(estoque) || estoque < 0) {
+      throw new Error("estoque das variantes precisa ser um número inteiro maior ou igual a zero");
+    }
+    return {
+      id: variante.id ? Number(variante.id) : null,
+      tamanho: variante.tamanho || null,
+      cor: variante.cor || null,
+      estoque
+    };
+  });
+}
+
+async function salvarVariantes(client, produtoId, variantes) {
+  for (const variante of variantes) {
+    if (variante.id) {
+      const { rowCount } = await client.query(
+        `UPDATE variacoes_produto
+         SET tamanho = $1, cor = $2, estoque = $3
+         WHERE id = $4 AND produto_id = $5`,
+        [variante.tamanho, variante.cor, variante.estoque, variante.id, produtoId]
+      );
+      if (rowCount === 0) throw new Error("Variação não pertence a este produto");
+    } else {
+      await client.query(
+        `INSERT INTO variacoes_produto (produto_id, tamanho, cor, estoque)
+         VALUES ($1, $2, $3, $4)`,
+        [produtoId, variante.tamanho, variante.cor, variante.estoque]
+      );
+    }
+  }
+}
+
 const ORDENACOES = {
   recentes: "p.created_at DESC",
   preco_asc: "p.preco ASC",
@@ -97,6 +142,12 @@ exports.createProduct = async (req, res) => {
     const { nome, descricao, preco, categoria_id, marca_id } = req.body;
     let estilo_ids = req.body['estilo_ids[]'] || req.body.estilo_ids || [];
     if (!Array.isArray(estilo_ids)) estilo_ids = [estilo_ids];
+    let variantes;
+    try {
+      variantes = lerVariantes(req.body);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
 
     if (!nome || !nome.trim() || !preco || preco <= 0) {
       return res.status(400).json({ message: "nome e preco (> 0) são obrigatórios" });
@@ -120,6 +171,8 @@ exports.createProduct = async (req, res) => {
       );
     }
 
+    if (variantes) await salvarVariantes(client, produto.id, variantes);
+
     await client.query("COMMIT");
     return res.status(201).json({ message: "Produto criado", id: produto.id });
   } catch (error) {
@@ -136,6 +189,12 @@ exports.updateProduct = async (req, res) => {
   try {
     const { nome, descricao, preco, categoria_id, marca_id, ativo } = req.body;
     let estilo_ids = req.body['estilo_ids[]'] || req.body.estilo_ids;
+    let variantes;
+    try {
+      variantes = lerVariantes(req.body);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
 
     let imagem_url = null;
     if (req.file) imagem_url = await uploadImage(req.file.buffer, "produtos");
@@ -170,6 +229,8 @@ exports.updateProduct = async (req, res) => {
         );
       }
     }
+
+    if (variantes) await salvarVariantes(client, req.params.id, variantes);
 
     await client.query("COMMIT");
     return res.json({ message: "Produto atualizado" });
