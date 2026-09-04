@@ -10,7 +10,7 @@ export default function Product() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { addItem } = useCart()
+  const { addItem, items: cartItems } = useCart()
   const { show } = useToast()
 
   const [produto, setProduto] = useState(null)
@@ -56,6 +56,11 @@ export default function Product() {
     }
     if (!variacaoEscolhida || semEstoque) {
       show('Escolha tamanho/cor disponível', 'error')
+      return
+    }
+    if (quantidade > estoqueRestante) {
+      show(`Você já possui ${quantidadeNoCarrinho} unidade(s) no carrinho. Restam ${estoqueRestante} em estoque.`, 'error')
+      setQuantidade(Math.max(1, estoqueRestante))
       return
     }
     setAdicionando(true)
@@ -113,7 +118,12 @@ export default function Product() {
   const variacaoEscolhida = variacoes.find(v =>
     (v.color || '-') === corSelecionada && (v.size || '-') === tamanhoSelecionado
   )
-  const semEstoque = !variacaoEscolhida || variacaoEscolhida.stock <= 0
+  const quantidadeNoCarrinho = Number(
+    cartItems.find(item => item.variantId === variacaoEscolhida?.id)?.quantity
+  ) || 0
+  const estoqueDisponivel = Number(variacaoEscolhida?.stock) || 0
+  const estoqueRestante = Math.max(0, estoqueDisponivel - quantidadeNoCarrinho)
+  const semEstoque = !variacaoEscolhida || estoqueRestante <= 0
 
   function corDisponivel(cor) {
     return variacoes.some(v =>
@@ -166,7 +176,7 @@ export default function Product() {
                     key={cor}
                     type="button"
                     className={`variant-pill ${corSelecionada === cor ? 'selecionado' : ''}`}
-                    onClick={() => setCorSelecionada(cor)}
+                    onClick={() => { setCorSelecionada(cor); setQuantidade(1) }}
                     disabled={!corDisponivel(cor)}
                     aria-pressed={corSelecionada === cor}
                   >
@@ -184,7 +194,7 @@ export default function Product() {
                     key={tamanho}
                     type="button"
                     className={`variant-pill ${tamanhoSelecionado === tamanho ? 'selecionado' : ''}`}
-                    onClick={() => setTamanhoSelecionado(tamanho)}
+                    onClick={() => { setTamanhoSelecionado(tamanho); setQuantidade(1) }}
                     disabled={!tamanhoDisponivel(tamanho)}
                     aria-pressed={tamanhoSelecionado === tamanho}
                   >
@@ -199,8 +209,12 @@ export default function Product() {
               id="quantidade"
               type="number"
               min="1"
+              max={estoqueRestante || undefined}
               value={quantidade}
-              onChange={e => setQuantidade(Math.max(1, Number(e.target.value)))}
+              onChange={e => {
+                const value = Math.max(1, Number(e.target.value))
+                setQuantidade(estoqueRestante > 0 ? Math.min(value, estoqueRestante) : value)
+              }}
             />
             </div>
           ) : (

@@ -1253,6 +1253,27 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
   background: #0a0a0f;
 }
 .product-page .main-image img { width: 100%; height: 100%; object-fit: cover }
+.product-page .main-image { position: relative; cursor: zoom-in; }
+.product-page .main-image::after {
+  content: '+';
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.45);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(10,10,15,.72);
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform .2s ease, background .2s ease;
+}
+.product-page .main-image:hover img { transform: scale(1.08); transition: transform .45s ease; }
+.product-page .main-image:hover::after { transform: scale(1.08); background: rgba(111,45,189,.86); }
 .produto-titulo-linha { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap }
 .details h1 { font-family: var(--font-heading); font-size: 24px; font-weight: 800 }
 .details .price { font-size: 22px; font-weight: 800; color: var(--accent); margin: 8px 0 }
