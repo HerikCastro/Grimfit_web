@@ -202,7 +202,7 @@ export default function AdminProducts() {
                 onClick={() => toggleEstilo(e.id)}
                 aria-pressed={form.styleIds.includes(e.id)}
               >
-                {e.name}
+                {e.name || e.nome}
               </button>
             ))}
           </div>

@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import Img from './Img'
 
 export default function CategorySection({ title = 'Categorias', categories = [] }) {
   if (categories.length === 0) return null
@@ -14,9 +13,6 @@ export default function CategorySection({ title = 'Categorias', categories = [] 
             to={`/catalog?categoryId=${c.id}`}
             className="category-tile"
           >
-            <div className="cat-image">
-              <Img src={c.image || c.imagem_url} alt={c.name || c.nome} />
-            </div>
             <span>{c.name || c.nome}</span>
           </Link>
         ))}

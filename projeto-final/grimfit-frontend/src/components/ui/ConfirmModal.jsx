@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 // Modal de confirmação com campo de senha obrigatório
 // para ações destrutivas. Chama onConfirm(senha) e
 // o chamador decide o que fazer com ela.
-export default function ConfirmModal({ mensagem, onConfirm, onCancel, loading = false, requirePassword = true }) {
+export default function ConfirmModal({ mensagem, onConfirm, onCancel, loading = false, requirePassword = true, confirmLabel = 'Confirmar' }) {
   const [senha, setSenha] = useState('')
   const [erroSenha, setErroSenha] = useState('')
 
@@ -45,7 +45,7 @@ export default function ConfirmModal({ mensagem, onConfirm, onCancel, loading = 
               Cancelar
             </button>
             <button type="submit" className="btn danger" disabled={loading}>
-              {loading ? 'Processando...' : 'Confirmar'}
+              {loading ? 'Processando...' : confirmLabel}
             </button>
           </div>
         </form>

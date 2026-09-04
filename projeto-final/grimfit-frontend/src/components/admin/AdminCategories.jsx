@@ -13,6 +13,7 @@ export default function AdminCategories() {
   const [editandoId, setEditandoId] = useState(null)
   const [salvando, setSalvando] = useState(false)
   const [apagarId, setApagarId] = useState(null)
+  const [forcarExclusao, setForcarExclusao] = useState(false)
   const [loadingApagar, setLoadingApagar] = useState(false)
 
   useEffect(() => { carregar() }, [])
@@ -49,23 +50,36 @@ export default function AdminCategories() {
   async function handleApagar(senha) {
     setLoadingApagar(true)
     try {
-      await adminDeleteCategory(apagarId, senha)
+      await adminDeleteCategory(apagarId, senha, forcarExclusao)
       show('Categoria removida', 'success')
       setApagarId(null)
+      setForcarExclusao(false)
       await carregar()
     } catch (err) {
-      show(err?.response?.data?.message || 'Senha incorreta ou há produtos nessa categoria', 'error')
+      if (err?.response?.status === 409 && !forcarExclusao) {
+        setForcarExclusao(true)
+      } else {
+        show(err?.response?.data?.message || 'Senha incorreta ou há produtos nessa categoria', 'error')
+      }
     } finally { setLoadingApagar(false) }
+  }
+
+  function cancelarExclusao() {
+    setApagarId(null)
+    setForcarExclusao(false)
   }
 
   return (
     <div className="admin-secao">
       {apagarId && (
         <ConfirmModal
-          mensagem="Apagar essa categoria? Produtos vinculados ficam sem categoria."
+          mensagem={forcarExclusao
+            ? 'Essa categoria possui produtos vinculados. Apagar mesmo assim?'
+            : 'Apagar essa categoria?'}
           onConfirm={handleApagar}
-          onCancel={() => setApagarId(null)}
+          onCancel={cancelarExclusao}
           loading={loadingApagar}
+          confirmLabel={forcarExclusao ? 'Apagar mesmo assim' : 'Confirmar'}
         />
       )}
       <h3>{editandoId ? 'Editar categoria' : 'Nova categoria'}</h3>
@@ -88,7 +102,6 @@ export default function AdminCategories() {
       <div className="admin-cards-grid small">
         {categorias.map(c => (
           <div key={c.id} className="admin-mini-card">
-            <Img src={c.imagem_url} alt={c.nome} className="admin-mini-img" />
             <span>{c.nome}</span>
             <div className="admin-mini-acoes">
               <button className="btn" onClick={() => { setEditandoId(c.id); setForm({ nome: c.nome }); setPreview(c.imagem_url) }}>Editar</button>

@@ -148,8 +148,9 @@ export async function adminUpdateCategory(id, formData) {
   return res.data
 }
 
-export async function adminDeleteCategory(id, confirmacaoSenha) {
-  const res = await API.delete(`/api/categories/${id}`, { data: { confirmacao_senha: confirmacaoSenha } })
+export async function adminDeleteCategory(id, confirmacaoSenha, force = false) {
+  const query = force ? '?force=true' : ''
+  const res = await API.delete(`/api/categories/${id}${query}`, { data: { confirmacao_senha: confirmacaoSenha } })
   return res.data
 }
 
