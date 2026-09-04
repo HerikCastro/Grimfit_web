@@ -30,7 +30,7 @@ export default function Product() {
         setProduto(p)
 
         const v = await getVariants(id)
-        setVariacoes(v || [])
+        setVariacoes(Array.isArray(v) ? v : [])
         setCorSelecionada('')
         setTamanhoSelecionado('')
 

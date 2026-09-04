@@ -10,7 +10,10 @@ export default function AdminVariants({ produtoId }) {
   useEffect(() => { carregar() }, [produtoId])
 
   async function carregar() {
-    try { setVariacoes(await getVariants(produtoId)) } catch (e) { console.error(e) }
+    try {
+      const variants = await getVariants(produtoId)
+      setVariacoes(Array.isArray(variants) ? variants : [])
+    } catch (e) { console.error(e) }
   }
 
   async function handleAdd(e) {

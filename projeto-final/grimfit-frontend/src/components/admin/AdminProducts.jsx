@@ -118,7 +118,7 @@ export default function AdminProducts() {
     setFile(null)
     try {
       const variantes = await getVariants(p.id)
-      setForm(f => ({ ...f, variants: variantes || [] }))
+      setForm(f => ({ ...f, variants: Array.isArray(variantes) ? variantes : [] }))
     } catch (e) { console.error(e) }
   }
 
@@ -218,7 +218,7 @@ export default function AdminProducts() {
           <label>Variantes (Cor, Tamanho e Estoque)</label>
           <div className="admin-form-variantes">
             {form.variants.map((variant, index) => (
-              <div className="admin-form-variante" key={variante.id || index}>
+              <div className="admin-form-variante" key={variant.id || index}>
                 <input
                   placeholder="Tamanho"
                   value={variant.size || ''}
