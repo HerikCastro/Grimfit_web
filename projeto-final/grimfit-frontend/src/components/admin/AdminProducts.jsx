@@ -6,7 +6,7 @@ import AdminVariants from './AdminVariants'
 import ConfirmModal from '../ui/ConfirmModal'
 import Textarea from '../ui/Textarea'
 
-const VAZIO = { nome: '', descricao: '', preco: '', categoria_id: '', marca_id: '', estilo_ids: [], variantes: [] }
+const VAZIO = { name: '', description: '', price: '', categoryId: '', brandId: '', styleIds: [], variants: [] }
 
 export default function AdminProducts() {
   const { show } = useToast()
@@ -33,7 +33,7 @@ export default function AdminProducts() {
   async function carregar() {
     try {
       const res = await getProducts({ limit: 100 })
-      setProdutos(res.produtos || [])
+      setProdutos(res.products || [])
     } catch (e) { console.error(e) }
   }
 
@@ -42,18 +42,18 @@ export default function AdminProducts() {
   }
 
   function adicionarVariante() {
-    setForm(f => ({ ...f, variantes: [...f.variantes, { tamanho: '', cor: '', estoque: 0 }] }))
+    setForm(f => ({ ...f, variants: [...f.variants, { size: '', color: '', stock: 0 }] }))
   }
 
   function atualizarVariante(index, campo, valor) {
     setForm(f => ({
       ...f,
-      variantes: f.variantes.map((variante, i) => i === index ? { ...variante, [campo]: valor } : variante)
+      variants: f.variants.map((variant, i) => i === index ? { ...variant, [campo]: valor } : variant)
     }))
   }
 
   function removerVariante(index) {
-    setForm(f => ({ ...f, variantes: f.variantes.filter((_, i) => i !== index) }))
+    setForm(f => ({ ...f, variants: f.variants.filter((_, i) => i !== index) }))
   }
 
   function handleFile(e) {
@@ -65,32 +65,32 @@ export default function AdminProducts() {
   function toggleEstilo(id) {
     setForm(f => ({
       ...f,
-      estilo_ids: f.estilo_ids.includes(id)
-        ? f.estilo_ids.filter(i => i !== id)
-        : [...f.estilo_ids, id]
+      styleIds: f.styleIds.includes(id)
+        ? f.styleIds.filter(i => i !== id)
+        : [...f.styleIds, id]
     }))
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!editandoId && !file) { show('Imagem é obrigatória', 'error'); return }
-    if (!form.estilo_ids.length) { show('Selecione ao menos um estilo', 'error'); return }
+    if (!form.styleIds.length) { show('Selecione ao menos um estilo', 'error'); return }
     setSalvando(true)
     try {
       const fd = new FormData()
-      fd.append('nome', form.nome)
-      fd.append('descricao', form.descricao)
-      fd.append('preco', form.preco)
-      if (form.categoria_id) fd.append('categoria_id', form.categoria_id)
-      if (form.marca_id) fd.append('marca_id', form.marca_id)
-      form.estilo_ids.forEach(id => fd.append('estilo_ids[]', id))
-      fd.append('variantes', JSON.stringify(form.variantes.map(v => ({
+      fd.append('name', form.name)
+      fd.append('description', form.description)
+      fd.append('price', form.price)
+      if (form.categoryId) fd.append('categoryId', form.categoryId)
+      if (form.brandId) fd.append('brandId', form.brandId)
+      form.styleIds.forEach(id => fd.append('styleIds[]', id))
+      fd.append('variants', JSON.stringify(form.variants.map(v => ({
         ...(v.id ? { id: v.id } : {}),
-        tamanho: v.tamanho,
-        cor: v.cor,
-        estoque: Number(v.estoque)
+        size: v.size,
+        color: v.color,
+        stock: Number(v.stock)
       }))))
-      if (file) fd.append('imagem', file)
+      if (file) fd.append('image', file)
       if (editandoId) await adminUpdateProduct(editandoId, fd)
       else await adminCreateProduct(fd)
       show('Produto salvo', 'success')
@@ -106,19 +106,19 @@ export default function AdminProducts() {
   async function editar(p) {
     setEditandoId(p.id)
     setForm({
-      nome: p.nome || '',
-      descricao: p.descricao || '',
-      preco: String(p.preco || ''),
-      categoria_id: p.categoria_id || '',
-      marca_id: p.marca_id || '',
-      estilo_ids: p.estilos?.map(e => e.id) || [],
-      variantes: []
+      name: p.name || '',
+      description: p.description || '',
+      price: String(p.price || ''),
+      categoryId: p.categoryId || '',
+      brandId: p.brandId || '',
+      styleIds: p.styles?.map(e => e.id) || [],
+      variants: []
     })
-    setPreview(p.imagem_url)
+    setPreview(p.imageUrl)
     setFile(null)
     try {
       const variantes = await getVariants(p.id)
-      setForm(f => ({ ...f, variantes: variantes || [] }))
+      setForm(f => ({ ...f, variants: variantes || [] }))
     } catch (e) { console.error(e) }
   }
 
@@ -158,33 +158,33 @@ export default function AdminProducts() {
       <form onSubmit={handleSubmit} className="admin-form">
         <div className="form-campo">
           <label htmlFor="p-nome">Nome</label>
-          <input id="p-nome" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} required />
+          <input id="p-nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
         </div>
         <div className="form-campo">
           <label htmlFor="p-desc">Descrição</label>
           <Textarea
             id="p-desc"
-            value={form.descricao}
-            onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
+            value={form.description}
+            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
             placeholder="Descreva o produto..."
           />
         </div>
         <div className="admin-form-row">
           <div className="form-campo">
             <label htmlFor="p-preco">Preço (R$)</label>
-            <input id="p-preco" type="number" step="0.01" min="0" value={form.preco}
-              onChange={e => setForm(f => ({ ...f, preco: e.target.value }))} required />
+            <input id="p-preco" type="number" step="0.01" min="0" value={form.price}
+              onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required />
           </div>
           <div className="form-campo">
             <label>Categoria</label>
-            <select value={form.categoria_id} onChange={e => setForm(f => ({ ...f, categoria_id: e.target.value }))}>
+            <select value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))}>
               <option value="">Sem categoria</option>
               {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
           </div>
           <div className="form-campo">
             <label>Marca</label>
-            <select value={form.marca_id} onChange={e => setForm(f => ({ ...f, marca_id: e.target.value }))}>
+            <select value={form.brandId} onChange={e => setForm(f => ({ ...f, brandId: e.target.value }))}>
               <option value="">Sem marca</option>
               {marcas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
             </select>
@@ -198,11 +198,11 @@ export default function AdminProducts() {
               <button
                 key={e.id}
                 type="button"
-                className={`estilo-chip ${form.estilo_ids.includes(e.id) ? 'selecionado' : ''}`}
+                className={`estilo-chip ${form.styleIds.includes(e.id) ? 'selecionado' : ''}`}
                 onClick={() => toggleEstilo(e.id)}
-                aria-pressed={form.estilo_ids.includes(e.id)}
+                aria-pressed={form.styleIds.includes(e.id)}
               >
-                {e.nome}
+                {e.name}
               </button>
             ))}
           </div>
@@ -217,25 +217,25 @@ export default function AdminProducts() {
         <div className="form-campo">
           <label>Variantes (Cor, Tamanho e Estoque)</label>
           <div className="admin-form-variantes">
-            {form.variantes.map((variante, index) => (
+            {form.variants.map((variant, index) => (
               <div className="admin-form-variante" key={variante.id || index}>
                 <input
                   placeholder="Tamanho"
-                  value={variante.tamanho || ''}
-                  onChange={e => atualizarVariante(index, 'tamanho', e.target.value)}
+                  value={variant.size || ''}
+                  onChange={e => atualizarVariante(index, 'size', e.target.value)}
                 />
                 <input
                   placeholder="Cor"
-                  value={variante.cor || ''}
-                  onChange={e => atualizarVariante(index, 'cor', e.target.value)}
+                  value={variant.color || ''}
+                  onChange={e => atualizarVariante(index, 'color', e.target.value)}
                 />
                 <input
                   type="number"
                   min="0"
                   step="1"
                   placeholder="Estoque"
-                  value={variante.estoque ?? 0}
-                  onChange={e => atualizarVariante(index, 'estoque', e.target.value)}
+                  value={variant.stock ?? 0}
+                  onChange={e => atualizarVariante(index, 'stock', e.target.value)}
                 />
                 <button type="button" className="btn danger small" onClick={() => removerVariante(index)}>Remover</button>
               </div>
@@ -260,14 +260,14 @@ export default function AdminProducts() {
           {produtos.map(p => (
             <div key={p.id} className="admin-produto-card">
               <div className="admin-produto-img">
-                <Img src={p.imagem_url} alt={p.nome} />
+                <Img src={p.imageUrl} alt={p.name} />
               </div>
               <div className="admin-produto-info">
-                <span className="admin-produto-nome">{p.nome}</span>
-                <span className="admin-produto-preco">R$ {Number(p.preco).toFixed(2).replace('.', ',')}</span>
-                {p.estilos?.length > 0 && (
+                <span className="admin-produto-nome">{p.name}</span>
+                <span className="admin-produto-preco">R$ {Number(p.price).toFixed(2).replace('.', ',')}</span>
+                {p.styles?.length > 0 && (
                   <div className="admin-produto-estilos">
-                    {p.estilos.map(e => <span key={e.id} className="estilo-tag">{e.nome}</span>)}
+                    {p.styles.map(e => <span key={e.id} className="estilo-tag">{e.name}</span>)}
                   </div>
                 )}
               </div>

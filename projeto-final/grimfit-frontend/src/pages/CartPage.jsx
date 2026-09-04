@@ -58,18 +58,18 @@ export default function CartPage() {
           {items.map(item => (
             <div key={item.id} className="cart-item">
               <div className="cart-item-imagem">
-                <Img src={item.imagem_url} alt={item.nome} />
+                <Img src={item.imageUrl} alt={item.name} />
               </div>
               <div className="cart-item-info">
-                <div className="cart-item-nome">{item.nome}</div>
-                <div className="muted">Tamanho: {item.tamanho || '-'} • Cor: {item.cor || '-'}</div>
-                <div className="cart-item-preco">{formatCurrency(item.preco)}</div>
+                <div className="cart-item-nome">{item.name}</div>
+                <div className="muted">Tamanho: {item.size || '-'} • Cor: {item.color || '-'}</div>
+                <div className="cart-item-preco">{formatCurrency(item.price)}</div>
               </div>
               <div className="cart-item-acoes">
                 <div className="quantidade-controle">
-                  <button onClick={() => updateItem(item.id, item.quantidade - 1)} disabled={item.quantidade <= 1}>-</button>
-                  <span>{item.quantidade}</span>
-                  <button onClick={() => updateItem(item.id, item.quantidade + 1)}>+</button>
+                  <button onClick={() => updateItem(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => updateItem(item.id, item.quantity + 1)}>+</button>
                 </div>
                 <button className="remover" onClick={() => removeItem(item.id)}>Remover</button>
               </div>

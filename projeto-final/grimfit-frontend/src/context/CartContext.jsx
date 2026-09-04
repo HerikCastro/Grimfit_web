@@ -24,13 +24,13 @@ export function CartProvider({ children }) {
     }
   }, [])
 
-  const addItem = useCallback(async (variacaoId, quantidade = 1) => {
-    await addCartItem(variacaoId, quantidade)
+  const addItem = useCallback(async (variantId, quantity = 1) => {
+    await addCartItem(variantId, quantity)
     await refreshCart()
   }, [refreshCart])
 
-  const updateItem = useCallback(async (itemId, quantidade) => {
-    await updateCartItem(itemId, quantidade)
+  const updateItem = useCallback(async (itemId, quantity) => {
+    await updateCartItem(itemId, quantity)
     await refreshCart()
   }, [refreshCart])
 
@@ -41,12 +41,12 @@ export function CartProvider({ children }) {
 
   const clearLocal = useCallback(() => setItems([]), [])
 
-  const total = items.reduce((soma, item) => {
-    const preco = parseFloat(item.preco) || 0
-    return soma + preco * item.quantidade
+  const total = items.reduce((sum, item) => {
+    const price = parseFloat(item.price) || 0
+    return sum + price * item.quantity
   }, 0)
 
-  const count = items.reduce((soma, item) => soma + item.quantidade, 0)
+  const count = items.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <CartContext.Provider value={{

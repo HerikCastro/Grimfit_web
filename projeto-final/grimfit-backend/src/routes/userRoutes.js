@@ -16,7 +16,7 @@ const {
 
 router.get("/profile", auth, profile);
 
-router.put("/profile", auth, upload.single("foto"), updateProfile);
+router.put("/profile", auth, upload.single("image"), updateProfile);
 
 router.put("/password", auth, changePassword);
 

@@ -4,16 +4,16 @@ exports.getVariantsByProduct = async (req, res) => {
 
   try {
 
-    const { rows: variacoes } = await pool.query(
+    const { rows: variants } = await pool.query(
       `
-      SELECT *
+      SELECT id, produto_id AS "productId", tamanho AS "size", cor AS "color", estoque AS "stock"
       FROM variacoes_produto
       WHERE produto_id = $1
       `,
-      [req.params.produtoId]
+      [req.params.productId]
     );
 
-    return res.json(variacoes);
+    return res.json(variants);
 
   } catch (error) {
 
@@ -31,11 +31,11 @@ exports.createVariant = async (req, res) => {
 
   try {
 
-    const { tamanho, cor, estoque } = req.body;
+    const { size, color, stock } = req.body;
 
     const { rows: produto } = await pool.query(
       "SELECT id FROM produtos WHERE id = $1",
-      [req.params.produtoId]
+      [req.params.productId]
     );
 
     if (produto.length === 0) {
@@ -51,7 +51,7 @@ exports.createVariant = async (req, res) => {
       VALUES ($1, $2, $3, $4)
       RETURNING id
       `,
-      [req.params.produtoId, tamanho, cor, estoque || 0]
+      [req.params.productId, size, color, stock || 0]
     );
 
     return res.status(201).json({
@@ -75,13 +75,13 @@ exports.updateVariant = async (req, res) => {
 
   try {
 
-    const { tamanho, cor, estoque } = req.body;
-    let estoqueAtualizado = estoque;
+    const { size, color, stock } = req.body;
+    let updatedStock = stock;
 
-    if (estoque !== undefined && estoque !== null) {
-      estoqueAtualizado = Number(estoque);
+    if (stock !== undefined && stock !== null) {
+      updatedStock = Number(stock);
 
-      if (!Number.isInteger(estoqueAtualizado) || estoqueAtualizado < 0) {
+      if (!Number.isInteger(updatedStock) || updatedStock < 0) {
         return res.status(400).json({
           message: "estoque precisa ser um número inteiro maior ou igual a zero"
         });
@@ -97,7 +97,7 @@ exports.updateVariant = async (req, res) => {
         estoque = COALESCE($3, estoque)
       WHERE id = $4
       `,
-      [tamanho, cor, estoqueAtualizado, req.params.id]
+      [size, color, updatedStock, req.params.id]
     );
 
     if (rowCount === 0) {

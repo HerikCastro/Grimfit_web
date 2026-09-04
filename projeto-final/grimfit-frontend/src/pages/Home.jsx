@@ -18,9 +18,9 @@ export default function Home() {
   useEffect(() => {
     async function carregarTudo() {
       setCarregando(true)
-      const carregarProdutos = getProducts({ ordenar: 'recentes', limit: 12 })
+      const carregarProdutos = getProducts({ sort: 'recentes', limit: 12 })
         .then(resProdutos => {
-          setProdutos(ensureArray(resProdutos?.produtos ?? resProdutos))
+          setProdutos(ensureArray(resProdutos?.products ?? resProdutos))
         })
         .catch(err => {
           console.error('Erro ao carregar produtos', err)

@@ -22,8 +22,8 @@ export default function Profile() {
   const { user, updateUser } = useAuth()
   const { show } = useToast()
 
-  const [form, setForm] = useState({ nome: '', email: '', telefone: '', genero: '' })
-  const [senhas, setSenhas] = useState({ senha_atual: '', nova_senha: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', gender: '' })
+  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' })
   const [pedidos, setPedidos] = useState([])
   const [estilos, setEstilos] = useState([])
   const [preferencias, setPreferencias_] = useState([])
@@ -33,10 +33,10 @@ export default function Profile() {
   const [previewFoto, setPreviewFoto] = useState(null)
 
   useEffect(() => {
-    if (user) setForm({ nome: user.nome || '', email: user.email || '', telefone: user.telefone || '', genero: user.genero || '' })
+    if (user) setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '', gender: user.gender || '' })
     getMyOrders().then(setPedidos).catch(() => {})
     getStyles().then(setEstilos).catch(() => {})
-    getPreferences().then(r => setPreferencias_(r.estilos?.map(e => e.id) || [])).catch(() => {})
+    getPreferences().then(r => setPreferencias_(r.styles?.map(e => e.id) || [])).catch(() => {})
   }, [user])
 
   async function handleSalvarDados(e) {
@@ -44,11 +44,11 @@ export default function Profile() {
     setSalvando(true)
     try {
       const dados = new FormData()
-      dados.append('nome', form.nome)
+      dados.append('name', form.name)
       dados.append('email', form.email)
-      dados.append('telefone', form.telefone)
-      dados.append('genero', form.genero)
-      if (foto) dados.append('foto', foto)
+      dados.append('phone', form.phone)
+      dados.append('gender', form.gender)
+      if (foto) dados.append('image', foto)
 
       const res = await updateProfile(dados)
       if (res.user) updateUser(res.user)
@@ -70,9 +70,9 @@ export default function Profile() {
   async function handleSenha(e) {
     e.preventDefault()
     try {
-      await changePassword(senhas)
+      await changePassword(passwords)
       show('Senha alterada', 'success')
-      setSenhas({ senha_atual: '', nova_senha: '' })
+      setPasswords({ currentPassword: '', newPassword: '' })
     } catch (err) { show(err?.response?.data?.message || 'Erro', 'error') }
   }
 
@@ -98,17 +98,17 @@ export default function Profile() {
     <div className="profile-page">
       <div className="profile-topo">
         <div className="profile-avatar">
-          {previewFoto || user?.foto_url ? (
-            <Img src={previewFoto || user.foto_url} alt="Foto de perfil" />
+          {previewFoto || user?.imageUrl ? (
+            <Img src={previewFoto || user.imageUrl} alt="Foto de perfil" />
           ) : (
-            user?.nome?.[0]?.toUpperCase() || 'U'
+            user?.name?.[0]?.toUpperCase() || 'U'
           )}
         </div>
         <div>
-          <h1 className="profile-nome">{user?.nome}</h1>
+          <h1 className="profile-nome">{user?.name}</h1>
           <span className="profile-email muted">{user?.email}</span>
-          {user?.tipo !== 'cliente' && (
-            <span className="profile-badge">{user?.tipo}</span>
+          {user?.role !== 'cliente' && (
+            <span className="profile-badge">{user?.role}</span>
           )}
         </div>
       </div>
@@ -124,7 +124,7 @@ export default function Profile() {
         </div>
         <div className="profile-stat">
           <span>Plano</span>
-          <strong>{user?.tipo === 'admin' ? 'Admin' : 'Cliente'}</strong>
+          <strong>{user?.role === 'admin' ? 'Admin' : 'Cliente'}</strong>
         </div>
       </div>
 
@@ -163,22 +163,22 @@ export default function Profile() {
             </div>
             <div className="form-campo">
               <label htmlFor="nome">Nome</label>
-              <input id="nome" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} required />
+              <input id="nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
             </div>
             <div className="form-campo">
               <label htmlFor="telefone">Telefone</label>
-              <input id="telefone" value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} />
+              <input id="telefone" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             </div>
             <div className="form-campo">
               <label>Gênero</label>
               <div className="genero-opcoes">
                 {GENEROS.map(g => (
-                  <label key={g.value} className={`genero-chip ${form.genero === g.value ? 'selecionado' : ''}`}>
+                  <label key={g.value} className={`genero-chip ${form.gender === g.value ? 'selecionado' : ''}`}>
                     <input
                       type="radio"
                       name="genero"
                       value={g.value}
-                      checked={form.genero === g.value}
+                      checked={form.gender === g.value}
                       onChange={() => setForm(f => ({ ...f, genero: g.value }))}
                     />
                     {g.label}
@@ -240,13 +240,13 @@ export default function Profile() {
           <form onSubmit={handleSenha} className="profile-form">
             <div className="form-campo">
               <label htmlFor="senha-atual">Senha atual</label>
-              <input id="senha-atual" type="password" value={senhas.senha_atual}
-                onChange={e => setSenhas(s => ({ ...s, senha_atual: e.target.value }))} required />
+              <input id="senha-atual" type="password" value={passwords.currentPassword}
+                onChange={e => setPasswords(s => ({ ...s, currentPassword: e.target.value }))} required />
             </div>
             <div className="form-campo">
               <label htmlFor="nova-senha">Nova senha</label>
-              <input id="nova-senha" type="password" value={senhas.nova_senha}
-                onChange={e => setSenhas(s => ({ ...s, nova_senha: e.target.value }))} required minLength={6} />
+              <input id="nova-senha" type="password" value={passwords.newPassword}
+                onChange={e => setPasswords(s => ({ ...s, newPassword: e.target.value }))} required minLength={6} />
             </div>
             <button type="submit" className="btn primary">Trocar senha</button>
           </form>

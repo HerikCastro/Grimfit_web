@@ -15,11 +15,11 @@ export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const aba = searchParams.get('aba') || 'loja'
-  const busca = searchParams.get('busca') || ''
-  const categoriaId = searchParams.get('categoria_id') || ''
-  const marcaId = searchParams.get('marca_id') || ''
-  const estiloId = searchParams.get('estilo_id') || ''
-  const ordenar = searchParams.get('ordenar') || 'recentes'
+  const search = searchParams.get('search') || ''
+  const categoryId = searchParams.get('categoryId') || ''
+  const brandId = searchParams.get('brandId') || ''
+  const styleId = searchParams.get('styleId') || ''
+  const sort = searchParams.get('sort') || 'recentes'
 
   const [produtos, setProdutos] = useState([])
   const [categorias, setCategorias] = useState([])
@@ -48,19 +48,19 @@ export default function Catalog() {
   useEffect(() => {
     buscarProdutos(1)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busca, categoriaId, marcaId, estiloId, ordenar, aba])
+  }, [search, categoryId, brandId, styleId, sort, aba])
 
   async function buscarProdutos(page) {
     setLoading(true)
     try {
-      const params = { page, limit: LIMIT, ordenar }
-      if (busca) params.busca = busca
-      if (categoriaId) params.categoria_id = categoriaId
-      if (marcaId) params.marca_id = marcaId
-      if (estiloId) params.estilo_id = estiloId
+      const params = { page, limit: LIMIT, sort }
+      if (search) params.search = search
+      if (categoryId) params.categoryId = categoryId
+      if (brandId) params.brandId = brandId
+      if (styleId) params.styleId = styleId
 
       const res = await getProducts(params)
-      const lista = ensureArray(res?.produtos ?? res)
+      const lista = ensureArray(res?.products ?? res)
       setProdutos(lista)
       setPagina(Number(res?.pagina || page) || 1)
       setTemProxima(lista.length === LIMIT)
@@ -86,14 +86,14 @@ export default function Catalog() {
     // Evita manter um filtro invisível ativo ao trocar de aba (ex: um
     // estilo selecionado continuando a filtrar a Loja sem aparecer
     // marcado em lugar nenhum na tela).
-    if (chave === 'loja') p.delete('estilo_id')
-    else p.delete('categoria_id')
+    if (chave === 'loja') p.delete('styleId')
+    else p.delete('categoryId')
     setSearchParams(p)
   }
 
   function handleBusca(e) {
     e.preventDefault()
-    atualizar('busca', e.target.elements.busca.value)
+    atualizar('search', e.target.elements.search.value)
   }
 
   return (
@@ -115,7 +115,7 @@ export default function Catalog() {
 
       <div className="filtros">
         <form onSubmit={handleBusca} className="filtro-busca">
-          <input name="busca" placeholder="Buscar produto..." defaultValue={busca} />
+          <input name="search" placeholder="Buscar produto..." defaultValue={search} />
           <button type="submit">Buscar</button>
         </form>
 
@@ -125,8 +125,8 @@ export default function Catalog() {
               <button
                 key={e.id}
                 type="button"
-                className={`estilo-chip ${estiloId === String(e.id) ? 'selecionado' : ''}`}
-                onClick={() => atualizar('estilo_id', estiloId === String(e.id) ? '' : String(e.id))}
+                className={`estilo-chip ${styleId === String(e.id) ? 'selecionado' : ''}`}
+                onClick={() => atualizar('styleId', styleId === String(e.id) ? '' : String(e.id))}
               >
                 {e.nome}
               </button>
@@ -134,18 +134,18 @@ export default function Catalog() {
           </div>
         ) : (
           <>
-            <select value={categoriaId} onChange={e => atualizar('categoria_id', e.target.value)}>
+            <select value={categoryId} onChange={e => atualizar('categoryId', e.target.value)}>
               <option value="">Todas as categorias</option>
               {categorias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
             </select>
-            <select value={marcaId} onChange={e => atualizar('marca_id', e.target.value)}>
+            <select value={brandId} onChange={e => atualizar('brandId', e.target.value)}>
               <option value="">Todas as marcas</option>
               {marcas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
             </select>
           </>
         )}
 
-        <select value={ordenar} onChange={e => atualizar('ordenar', e.target.value)}>
+        <select value={sort} onChange={e => atualizar('sort', e.target.value)}>
           <option value="recentes">Mais recentes</option>
           <option value="preco_asc">Menor preço</option>
           <option value="preco_desc">Maior preço</option>

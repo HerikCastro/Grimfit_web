@@ -108,26 +108,26 @@ export default function Product() {
 
   if (!produto) return <div className="rota-carregando" aria-hidden="true" />
 
-  const cores = [...new Set(variacoes.map(v => v.cor || '-'))]
-  const tamanhos = [...new Set(variacoes.map(v => v.tamanho || '-'))]
+  const cores = [...new Set(variacoes.map(v => v.color || '-'))]
+  const tamanhos = [...new Set(variacoes.map(v => v.size || '-'))]
   const variacaoEscolhida = variacoes.find(v =>
-    (v.cor || '-') === corSelecionada && (v.tamanho || '-') === tamanhoSelecionado
+    (v.color || '-') === corSelecionada && (v.size || '-') === tamanhoSelecionado
   )
-  const semEstoque = !variacaoEscolhida || variacaoEscolhida.estoque <= 0
+  const semEstoque = !variacaoEscolhida || variacaoEscolhida.stock <= 0
 
   function corDisponivel(cor) {
     return variacoes.some(v =>
-      (v.cor || '-') === cor &&
-      (!tamanhoSelecionado || (v.tamanho || '-') === tamanhoSelecionado) &&
-      v.estoque > 0
+      (v.color || '-') === cor &&
+      (!tamanhoSelecionado || (v.size || '-') === tamanhoSelecionado) &&
+      v.stock > 0
     )
   }
 
   function tamanhoDisponivel(tamanho) {
     return variacoes.some(v =>
-      (v.tamanho || '-') === tamanho &&
-      (!corSelecionada || (v.cor || '-') === corSelecionada) &&
-      v.estoque > 0
+      (v.size || '-') === tamanho &&
+      (!corSelecionada || (v.color || '-') === corSelecionada) &&
+      v.stock > 0
     )
   }
 
@@ -135,25 +135,25 @@ export default function Product() {
     <div className="product-page">
       <div className="gallery">
         <div className="main-image">
-          <Img src={produto.imagem_url} alt={produto.nome} />
+          <Img src={produto.imageUrl} alt={produto.name} />
         </div>
       </div>
       <div className="details">
         <div className="produto-titulo-linha">
-          <h1>{produto.nome}</h1>
+          <h1>{produto.name}</h1>
           <button className="botao-favorito" onClick={handleFavorito} aria-pressed={favoritado}>
             {favoritado ? '★ Favoritado' : '☆ Favoritar'}
           </button>
         </div>
-        <div className="product-price">R$ {produto.preco}</div>
-        {produto.estilos && produto.estilos.length > 0 && (
+        <div className="product-price">R$ {produto.price}</div>
+        {produto.styles && produto.styles.length > 0 && (
           <div className="tags-estilo">
-            {produto.estilos.map(e => (
-              <span key={e.id} className="tag-estilo">{e.nome}</span>
+            {produto.styles.map(e => (
+              <span key={e.id} className="tag-estilo">{e.name}</span>
             ))}
           </div>
         )}
-        <p className="product-description">{produto.descricao}</p>
+        <p className="product-description">{produto.description}</p>
 
         <div className="purchase-panel">
           {variacoes.length > 0 ? (

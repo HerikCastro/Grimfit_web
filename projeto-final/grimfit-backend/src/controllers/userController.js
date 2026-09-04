@@ -6,18 +6,18 @@ exports.profile = async (req, res) => {
 
   try {
 
-    const { rows: usuario } =
+    const { rows: user } =
       await pool.query(
         `
         SELECT
         id,
-        nome,
+        nome AS "name",
         email,
-        telefone,
-        foto_url,
-        tipo,
-        genero,
-        preferencias_definidas
+        telefone AS "phone",
+        foto_url AS "imageUrl",
+        tipo AS "role",
+        genero AS "gender",
+        preferencias_definidas AS "preferencesDefined"
         FROM usuarios
         WHERE id = $1
         `,
@@ -25,7 +25,7 @@ exports.profile = async (req, res) => {
       );
 
     return res.json(
-      usuario[0]
+      user[0]
     );
 
   } catch (error) {
@@ -46,32 +46,32 @@ exports.updateProfile = async (req, res) => {
 
   try {
 
-    const { nome, email, telefone, genero } = req.body;
-    const emailNormalizado = email?.trim().toLowerCase();
+    const { name, email, phone, gender } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
 
-    if (!nome || !nome.trim()) {
+    if (!name || !name.trim()) {
       return res.status(400).json({
         message: "Nome é obrigatório"
       });
     }
 
-    if (!emailNormalizado || !/.+@.+\..+/.test(emailNormalizado)) {
+    if (!normalizedEmail || !/.+@.+\..+/.test(normalizedEmail)) {
       return res.status(400).json({
         message: "E-mail válido é obrigatório"
       });
     }
 
-    if (genero !== undefined && genero !== null && !GENEROS_VALIDOS.includes(genero)) {
+    if (gender !== undefined && gender !== null && !GENEROS_VALIDOS.includes(gender)) {
       return res.status(400).json({
         message: `genero precisa ser um de: ${GENEROS_VALIDOS.join(", ")}`
       });
     }
 
-    const fotoUrl = req.file
+    const imageUrl = req.file
       ? await uploadImage(req.file.buffer, "usuarios")
       : null;
 
-    const { rows: usuarios } = await pool.query(
+    const { rows: users } = await pool.query(
       `
       UPDATE usuarios
       SET
@@ -81,18 +81,19 @@ exports.updateProfile = async (req, res) => {
         genero = COALESCE($4, genero),
         foto_url = COALESCE($5, foto_url)
       WHERE id = $6
-      RETURNING id, nome, email, telefone, foto_url, tipo, genero, preferencias_definidas
+      RETURNING id, nome AS "name", email, telefone AS "phone", foto_url AS "imageUrl",
+        tipo AS "role", genero AS "gender", preferencias_definidas AS "preferencesDefined"
       `,
-      [nome.trim(), emailNormalizado, telefone || null, genero || null, fotoUrl, req.user.id]
+      [name.trim(), normalizedEmail, phone || null, gender || null, imageUrl, req.user.id]
     );
 
-    if (usuarios.length === 0) {
+    if (users.length === 0) {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
     return res.json({
       message: "Perfil atualizado",
-      user: usuarios[0]
+      user: users[0]
     });
 
   } catch (error) {
@@ -115,11 +116,11 @@ exports.changePassword = async (req, res) => {
 
   try {
 
-    const { senha_atual, nova_senha } = req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    if (!senha_atual || !nova_senha || nova_senha.length < 6) {
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
       return res.status(400).json({
-        message: "senha_atual e nova_senha (mín. 6 caracteres) são obrigatórios"
+        message: "currentPassword e newPassword (mín. 6 caracteres) são obrigatórios"
       });
     }
 
@@ -134,18 +135,18 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const senhaValida = await bcrypt.compare(
-      senha_atual,
+      const passwordValid = await bcrypt.compare(
+        currentPassword,
       usuarios[0].senha
     );
 
-    if (!senhaValida) {
+      if (!passwordValid) {
       return res.status(400).json({
         message: "Senha atual incorreta"
       });
     }
 
-    const hash = await bcrypt.hash(nova_senha, 10);
+    const hash = await bcrypt.hash(newPassword, 10);
 
     await pool.query(
       "UPDATE usuarios SET senha = $1 WHERE id = $2",
@@ -174,7 +175,7 @@ exports.getPreferences = async (req, res) => {
 
   try {
 
-    const { rows: estilos } = await pool.query(
+    const { rows: styles } = await pool.query(
       `
       SELECT e.id, e.nome
       FROM usuario_estilos_preferidos uep
@@ -185,7 +186,7 @@ exports.getPreferences = async (req, res) => {
       [req.user.id]
     );
 
-    return res.json({ estilos });
+    return res.json({ styles });
 
   } catch (error) {
 
@@ -203,11 +204,11 @@ exports.setPreferences = async (req, res) => {
 
   try {
 
-    const { style_ids } = req.body;
+    const { styleIds } = req.body;
 
-    if (!Array.isArray(style_ids)) {
+    if (!Array.isArray(styleIds)) {
       return res.status(400).json({
-        message: "style_ids precisa ser uma lista"
+        message: "styleIds precisa ser uma lista"
       });
     }
 
@@ -216,7 +217,7 @@ exports.setPreferences = async (req, res) => {
       [req.user.id]
     );
 
-    for (const styleId of style_ids) {
+    for (const styleId of styleIds) {
       await pool.query(
         `
         INSERT INTO usuario_estilos_preferidos (usuario_id, estilo_id)
@@ -256,9 +257,9 @@ exports.confirmPassword = async (req, res) => {
 
   try {
 
-    const { senha } = req.body;
+    const { password } = req.body;
 
-    if (!senha) {
+    if (!password) {
       return res.status(400).json({
         message: "Senha é obrigatória"
       });
@@ -275,9 +276,9 @@ exports.confirmPassword = async (req, res) => {
       });
     }
 
-    const valida = await bcrypt.compare(senha, usuarios[0].senha);
+    const passwordValid = await bcrypt.compare(password, usuarios[0].senha);
 
-    if (!valida) {
+    if (!passwordValid) {
       return res.status(401).json({
         confirmado: false,
         message: "Senha incorreta"

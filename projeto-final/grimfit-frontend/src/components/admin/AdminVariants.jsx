@@ -17,9 +17,9 @@ export default function AdminVariants({ produtoId }) {
     e.preventDefault()
     try {
       await adminCreateVariant(produtoId, {
-        tamanho: form.tamanho,
-        cor: form.cor,
-        estoque: Number(form.estoque) || 0
+        size: form.tamanho,
+        color: form.cor,
+        stock: Number(form.estoque) || 0
       })
       setForm({ tamanho: '', cor: '', estoque: '' })
       await carregar()
@@ -30,7 +30,7 @@ export default function AdminVariants({ produtoId }) {
 
   async function handleEstoque(v, novoEstoque) {
     try {
-      await adminUpdateVariant(v.id, { estoque: Number(novoEstoque) })
+      await adminUpdateVariant(v.id, { stock: Number(novoEstoque) })
       await carregar()
     } catch (err) {
       show('Erro ao atualizar estoque', 'error')
@@ -64,13 +64,13 @@ export default function AdminVariants({ produtoId }) {
           <tbody>
             {variacoes.map(v => (
               <tr key={v.id}>
-                <td>{v.tamanho || '-'}</td>
-                <td>{v.cor || '-'}</td>
+                <td>{v.size || '-'}</td>
+                <td>{v.color || '-'}</td>
                 <td>
                   <input
                     type="number"
                     min="0"
-                    defaultValue={v.estoque}
+                    defaultValue={v.stock}
                     onBlur={e => handleEstoque(v, e.target.value)}
                     className="input-estoque"
                   />

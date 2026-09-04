@@ -4,18 +4,19 @@ exports.getCart = async (req, res) => {
 
   try {
 
-    const { rows: carrinho } =
+    const { rows: cartItems } =
       await pool.query(
         `
         SELECT
           ic.id,
-          ic.quantidade,
-          ic.variacao_id,
-          p.id AS produto_id,
-          p.nome,
-          p.preco,
-          vp.tamanho,
-          vp.cor
+          ic.quantidade AS "quantity",
+          ic.variacao_id AS "variantId",
+          p.id AS "productId",
+          p.nome AS "name",
+          p.preco AS "price",
+          p.imagem_url AS "imageUrl",
+          vp.tamanho AS "size",
+          vp.cor AS "color"
         FROM carrinhos c
         JOIN itens_carrinho ic
           ON ic.carrinho_id = c.id
@@ -28,7 +29,7 @@ exports.getCart = async (req, res) => {
         [req.user.id]
       );
 
-    return res.json(carrinho);
+    return res.json(cartItems);
 
   } catch (error) {
 
@@ -47,20 +48,20 @@ exports.addCartItem = async (req, res) => {
   try {
 
     const {
-      variacao_id,
-      quantidade
+      variantId,
+      quantity
     } = req.body;
-    const quantidadeSolicitada = Number(quantidade);
+    const requestedQuantity = Number(quantity);
 
-    if (!variacao_id || !Number.isInteger(quantidadeSolicitada) || quantidadeSolicitada < 1) {
+    if (!variantId || !Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
       return res.status(400).json({
-        message: "variacao_id e quantidade (>=1) são obrigatórios"
+        message: "variantId e quantity (>=1) são obrigatórios"
       });
     }
 
     const { rows: variacao } = await pool.query(
       "SELECT id, estoque FROM variacoes_produto WHERE id = $1",
-      [variacao_id]
+      [variantId]
     );
 
     if (variacao.length === 0) {
@@ -72,7 +73,7 @@ exports.addCartItem = async (req, res) => {
     let { rows: cart } =
       await pool.query(
         `
-        SELECT *
+        SELECT id
         FROM carrinhos
         WHERE usuario_id = $1
         `,
@@ -96,21 +97,21 @@ exports.addCartItem = async (req, res) => {
       }];
     }
 
-    // Se o item (mesma variação) já está no carrinho, soma a quantidade
-    // em vez de criar uma linha duplicada.
-    const { rows: existente } = await pool.query(
+    // If the same variation is already in the cart, increase its quantity
+    // instead of creating a duplicate row.
+    const { rows: existingItem } = await pool.query(
       `
       SELECT id, quantidade
       FROM itens_carrinho
       WHERE carrinho_id = $1
       AND variacao_id = $2
       `,
-      [cart[0].id, variacao_id]
+      [cart[0].id, variantId]
     );
 
-    if (existente.length > 0) {
+    if (existingItem.length > 0) {
 
-      if (existente[0].quantidade + quantidadeSolicitada > variacao[0].estoque) {
+      if (existingItem[0].quantidade + requestedQuantity > variacao[0].estoque) {
         return res.status(409).json({
           message: "Quantidade solicitada maior que o estoque disponível"
         });
@@ -122,7 +123,7 @@ exports.addCartItem = async (req, res) => {
         SET quantidade = quantidade + $1
         WHERE id = $2
         `,
-        [quantidadeSolicitada, existente[0].id]
+        [requestedQuantity, existingItem[0].id]
       );
 
       return res.json({
@@ -130,7 +131,7 @@ exports.addCartItem = async (req, res) => {
       });
     }
 
-    if (quantidadeSolicitada > variacao[0].estoque) {
+    if (requestedQuantity > variacao[0].estoque) {
       return res.status(409).json({
         message: "Quantidade solicitada maior que o estoque disponível"
       });
@@ -148,8 +149,8 @@ exports.addCartItem = async (req, res) => {
       `,
       [
         cart[0].id,
-        variacao_id,
-        quantidadeSolicitada
+        variantId,
+        requestedQuantity
       ]
     );
 
@@ -173,17 +174,17 @@ exports.updateCartItem = async (req, res) => {
 
   try {
 
-    const { quantidade } = req.body;
-    const quantidadeSolicitada = Number(quantidade);
+    const { quantity } = req.body;
+    const requestedQuantity = Number(quantity);
 
-    if (!Number.isInteger(quantidadeSolicitada) || quantidadeSolicitada < 1) {
+    if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1) {
       return res.status(400).json({
-        message: "quantidade precisa ser no mínimo 1"
+        message: "quantity precisa ser no mínimo 1"
       });
     }
 
-    // Confirma que o item pertence a um carrinho do usuário logado
-    // antes de deixar editar (evita alterar item de outra pessoa).
+    // Confirm that the item belongs to the logged-in user's cart
+    // before allowing it to be edited.
     const { rows: item } = await pool.query(
       `
       SELECT ic.id, vp.estoque
@@ -202,7 +203,7 @@ exports.updateCartItem = async (req, res) => {
       });
     }
 
-    if (quantidadeSolicitada > item[0].estoque) {
+    if (requestedQuantity > item[0].estoque) {
       return res.status(409).json({
         message: "Quantidade solicitada maior que o estoque disponível"
       });
@@ -214,7 +215,7 @@ exports.updateCartItem = async (req, res) => {
       SET quantidade = $1
       WHERE id = $2
       `,
-      [quantidadeSolicitada, req.params.id]
+      [requestedQuantity, req.params.id]
     );
 
     return res.json({
@@ -237,9 +238,8 @@ exports.removeCartItem = async (req, res) => {
 
   try {
 
-    // Antes só deletava pelo id, sem checar dono — permitia
-    // qualquer usuário logado apagar item de carrinho alheio
-    // se soubesse (ou chutasse) o id certo.
+    // Confirm ownership before deleting the item so a logged-in user
+    // cannot remove an item from someone else's cart.
     const { rows: item } = await pool.query(
       `
       SELECT ic.id

@@ -39,7 +39,7 @@ export async function changePassword(payload) {
 }
 
 // ===== Produtos =====
-// params aceitos pelo backend: busca, categoria_id, marca_id, preco_min, preco_max, ordenar, page, limit
+// Accepted query parameters: search, categoryId, brandId, styleId, minPrice, maxPrice, sort, page, limit
 export async function getProducts(params = {}) {
   const res = await API.get('/api/products', { params })
   return res.data // { produtos, pagina, por_pagina }
@@ -70,13 +70,13 @@ export async function adminDeleteProduct(id, confirmacaoSenha) {
 }
 
 // ===== Variações de produto (tamanho/cor/estoque) =====
-export async function getVariants(produtoId) {
-  const res = await API.get(`/api/variants/produto/${produtoId}`)
+export async function getVariants(productId) {
+  const res = await API.get(`/api/variants/product/${productId}`)
   return res.data
 }
 
-export async function adminCreateVariant(produtoId, payload) {
-  const res = await API.post(`/api/variants/produto/${produtoId}`, payload)
+export async function adminCreateVariant(productId, payload) {
+  const res = await API.post(`/api/variants/product/${productId}`, payload)
   return res.data
 }
 
@@ -107,7 +107,7 @@ export async function adminUpdateStyle(id, payload) {
 }
 
 export async function adminDeleteStyle(id, confirmPassword) {
-  const res = await API.delete(`/api/styles/${id}`, { data: { confirmacao_senha: confirmPassword } })
+  const res = await API.delete(`/api/styles/${id}`, { data: { confirmationPassword: confirmPassword } })
   return res.data
 }
 
@@ -118,13 +118,13 @@ export async function getPreferences() {
 }
 
 export async function setPreferences(styleIds) {
-  const res = await API.put('/api/users/preferences', { style_ids: styleIds })
+  const res = await API.put('/api/users/preferences', { styleIds })
   return res.data
 }
 
 // ===== Password Confirmation =====
 export async function confirmPassword(password) {
-  const res = await API.post('/api/users/confirm-password', { senha: password })
+  const res = await API.post('/api/users/confirm-password', { password })
   return res.data
 }
 
@@ -184,13 +184,13 @@ export async function getCart() {
   return res.data
 }
 
-export async function addCartItem(variacao_id, quantidade = 1) {
-  const res = await API.post('/api/cart', { variacao_id, quantidade })
+export async function addCartItem(variantId, quantity = 1) {
+  const res = await API.post('/api/cart', { variantId, quantity })
   return res.data
 }
 
-export async function updateCartItem(itemId, quantidade) {
-  const res = await API.put(`/api/cart/${itemId}`, { quantidade })
+export async function updateCartItem(itemId, quantity) {
+  const res = await API.put(`/api/cart/${itemId}`, { quantity })
   return res.data
 }
 

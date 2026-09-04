@@ -4,9 +4,9 @@ import Img from './Img'
 
 export default function ProductCard({ product }) {
   if (!product) return null
-  const img   = product.imagem_url || product.imagem || product.image
-  const nome  = product.nome || product.name || 'Produto'
-  const preco = product.preco || product.price || '0.00'
+  const img   = product.imageUrl || product.image
+  const nome  = product.name || 'Produto'
+  const preco = product.price || '0.00'
   const badge = product.badge || product.tag || null
 
   return (

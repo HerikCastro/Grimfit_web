@@ -1,46 +1,46 @@
 const pool = require("../config/db");
 const uploadImage = require("../utils/uploadImage");
 
-function lerVariantes(body) {
-  if (body.variantes === undefined) return undefined;
+function readVariants(body) {
+  if (body.variants === undefined) return undefined;
 
-  const variantes = typeof body.variantes === "string"
-    ? JSON.parse(body.variantes)
-    : body.variantes;
+  const variants = typeof body.variants === "string"
+    ? JSON.parse(body.variants)
+    : body.variants;
 
-  if (!Array.isArray(variantes)) {
+  if (!Array.isArray(variants)) {
     throw new Error("variantes precisa ser uma lista");
   }
 
-  return variantes.map((variante) => {
-    const estoque = Number(variante.estoque);
-    if (!Number.isInteger(estoque) || estoque < 0) {
+  return variants.map((variant) => {
+    const stock = Number(variant.stock);
+    if (!Number.isInteger(stock) || stock < 0) {
       throw new Error("estoque das variantes precisa ser um número inteiro maior ou igual a zero");
     }
     return {
-      id: variante.id ? Number(variante.id) : null,
-      tamanho: variante.tamanho || null,
-      cor: variante.cor || null,
-      estoque
+      id: variant.id ? Number(variant.id) : null,
+      size: variant.size || null,
+      color: variant.color || null,
+      stock
     };
   });
 }
 
-async function salvarVariantes(client, produtoId, variantes) {
-  for (const variante of variantes) {
-    if (variante.id) {
+async function saveVariants(client, productId, variants) {
+  for (const variant of variants) {
+    if (variant.id) {
       const { rowCount } = await client.query(
         `UPDATE variacoes_produto
          SET tamanho = $1, cor = $2, estoque = $3
          WHERE id = $4 AND produto_id = $5`,
-        [variante.tamanho, variante.cor, variante.estoque, variante.id, produtoId]
+        [variant.size, variant.color, variant.stock, variant.id, productId]
       );
       if (rowCount === 0) throw new Error("Variação não pertence a este produto");
     } else {
       await client.query(
         `INSERT INTO variacoes_produto (produto_id, tamanho, cor, estoque)
          VALUES ($1, $2, $3, $4)`,
-        [produtoId, variante.tamanho, variante.cor, variante.estoque]
+        [productId, variant.size, variant.color, variant.stock]
       );
     }
   }
@@ -55,57 +55,64 @@ const ORDENACOES = {
 
 exports.getProducts = async (req, res) => {
   try {
-    const { busca, categoria_id, marca_id, estilo_id, preco_min, preco_max, ordenar, page, limit } = req.query;
-    const condicoes = ["p.ativo = TRUE"];
-    const valores = [];
+    const { search, categoryId, brandId, styleId, minPrice, maxPrice, sort, page, limit } = req.query;
+    const conditions = ["p.ativo = TRUE"];
+    const values = [];
 
-    if (busca && busca.trim()) {
-      valores.push(`%${busca.trim()}%`);
-      condicoes.push(`(p.nome ILIKE $${valores.length} OR p.descricao ILIKE $${valores.length})`);
+    if (search && search.trim()) {
+      values.push(`%${search.trim()}%`);
+      conditions.push(`(p.nome ILIKE $${values.length} OR p.descricao ILIKE $${values.length})`);
     }
-    if (categoria_id) { valores.push(categoria_id); condicoes.push(`p.categoria_id = $${valores.length}`); }
-    if (marca_id)     { valores.push(marca_id);     condicoes.push(`p.marca_id = $${valores.length}`); }
-    if (preco_min)    { valores.push(preco_min);    condicoes.push(`p.preco >= $${valores.length}`); }
-    if (preco_max)    { valores.push(preco_max);    condicoes.push(`p.preco <= $${valores.length}`); }
+    if (categoryId) { values.push(categoryId); conditions.push(`p.categoria_id = $${values.length}`); }
+    if (brandId) { values.push(brandId); conditions.push(`p.marca_id = $${values.length}`); }
+    if (minPrice) { values.push(minPrice); conditions.push(`p.preco >= $${values.length}`); }
+    if (maxPrice) { values.push(maxPrice); conditions.push(`p.preco <= $${values.length}`); }
 
-    if (estilo_id) {
-      valores.push(estilo_id);
-      condicoes.push(`EXISTS (SELECT 1 FROM produto_estilos pe WHERE pe.produto_id = p.id AND pe.estilo_id = $${valores.length})`);
+    if (styleId) {
+      values.push(styleId);
+      conditions.push(`EXISTS (SELECT 1 FROM produto_estilos pe WHERE pe.produto_id = p.id AND pe.estilo_id = $${values.length})`);
     }
 
-    const ordem = ORDENACOES[ordenar] || ORDENACOES.recentes;
-    const paginaAtual = Math.max(parseInt(page, 10) || 1, 1);
-    const porPagina   = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
-    const offset      = (paginaAtual - 1) * porPagina;
+    const order = ORDENACOES[sort] || ORDENACOES.recentes;
+    const currentPage = Math.max(parseInt(page, 10) || 1, 1);
+    const pageSize = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const offset = (currentPage - 1) * pageSize;
 
-    valores.push(porPagina);
-    const paramLimit = valores.length;
-    valores.push(offset);
-    const paramOffset = valores.length;
+    values.push(pageSize);
+    const limitParameter = values.length;
+    values.push(offset);
+    const offsetParameter = values.length;
 
     const query = `
-      SELECT p.*,
-             c.nome AS categoria_nome,
-             m.nome AS marca_nome,
+      SELECT p.id,
+             p.nome AS "name",
+             p.descricao AS "description",
+             p.preco AS "price",
+             p.imagem_url AS "imageUrl",
+             p.categoria_id AS "categoryId",
+             p.marca_id AS "brandId",
+             p.ativo AS "active",
+             c.nome AS "categoryName",
+             m.nome AS "brandName",
              COALESCE(
-               json_agg(DISTINCT jsonb_build_object('id', e.id, 'nome', e.nome))
+               json_agg(DISTINCT jsonb_build_object('id', e.id, 'name', e.nome))
                FILTER (WHERE e.id IS NOT NULL),
                '[]'
-             ) AS estilos
+             ) AS "styles"
       FROM produtos p
       LEFT JOIN categorias c ON c.id = p.categoria_id
       LEFT JOIN marcas m ON m.id = p.marca_id
       LEFT JOIN produto_estilos pe ON pe.produto_id = p.id
       LEFT JOIN estilos e ON e.id = pe.estilo_id
-      WHERE ${condicoes.join(" AND ")}
+      WHERE ${conditions.join(" AND ")}
       GROUP BY p.id, c.nome, m.nome
-      ORDER BY ${ordem}
-      LIMIT $${paramLimit}
-      OFFSET $${paramOffset}
+      ORDER BY ${order}
+      LIMIT $${limitParameter}
+      OFFSET $${offsetParameter}
     `;
 
-    const { rows: produtos } = await pool.query(query, valores);
-    return res.json({ produtos, pagina: paginaAtual, por_pagina: porPagina });
+    const { rows: products } = await pool.query(query, values);
+    return res.json({ products, page: currentPage, perPage: pageSize });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Erro interno" });
@@ -115,12 +122,19 @@ exports.getProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT p.*,
+      `SELECT p.id,
+              p.nome AS "name",
+              p.descricao AS "description",
+              p.preco AS "price",
+              p.imagem_url AS "imageUrl",
+              p.categoria_id AS "categoryId",
+              p.marca_id AS "brandId",
+              p.ativo AS "active",
               COALESCE(
-                json_agg(DISTINCT jsonb_build_object('id', e.id, 'nome', e.nome))
+                json_agg(DISTINCT jsonb_build_object('id', e.id, 'name', e.nome))
                 FILTER (WHERE e.id IS NOT NULL),
                 '[]'
-              ) AS estilos
+              ) AS "styles"
        FROM produtos p
        LEFT JOIN produto_estilos pe ON pe.produto_id = p.id
        LEFT JOIN estilos e ON e.id = pe.estilo_id
@@ -139,42 +153,42 @@ exports.getProductById = async (req, res) => {
 exports.createProduct = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { nome, descricao, preco, categoria_id, marca_id } = req.body;
-    let estilo_ids = req.body['estilo_ids[]'] || req.body.estilo_ids || [];
-    if (!Array.isArray(estilo_ids)) estilo_ids = [estilo_ids];
-    let variantes;
+    const { name, description, price, categoryId, brandId } = req.body;
+    let styleIds = req.body['styleIds[]'] || req.body.styleIds || [];
+    if (!Array.isArray(styleIds)) styleIds = [styleIds];
+    let variants;
     try {
-      variantes = lerVariantes(req.body);
+      variants = readVariants(req.body);
     } catch (error) {
       return res.status(400).json({ message: error.message });
     }
 
-    if (!nome || !nome.trim() || !preco || preco <= 0) {
+    if (!name || !name.trim() || !price || price <= 0) {
       return res.status(400).json({ message: "nome e preco (> 0) são obrigatórios" });
     }
     if (!req.file) return res.status(400).json({ message: "Imagem é obrigatória" });
 
-    const imagem_url = await uploadImage(req.file.buffer, "produtos");
+    const imageUrl = await uploadImage(req.file.buffer, "produtos");
 
     await client.query("BEGIN");
 
-    const { rows: [produto] } = await client.query(
+    const { rows: [product] } = await client.query(
       `INSERT INTO produtos (nome, descricao, preco, imagem_url, categoria_id, marca_id)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-      [nome, descricao, preco, imagem_url, categoria_id || null, marca_id || null]
+      [name, description, price, imageUrl, categoryId || null, brandId || null]
     );
 
-    for (const estiloId of estilo_ids) {
+    for (const styleId of styleIds) {
       await client.query(
         "INSERT INTO produto_estilos (produto_id, estilo_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
-        [produto.id, Number(estiloId)]
+        [product.id, Number(styleId)]
       );
     }
 
-    if (variantes) await salvarVariantes(client, produto.id, variantes);
+    if (variants) await saveVariants(client, product.id, variants);
 
     await client.query("COMMIT");
-    return res.status(201).json({ message: "Produto criado", id: produto.id });
+    return res.status(201).json({ message: "Produto criado", id: product.id });
   } catch (error) {
     await client.query("ROLLBACK");
     console.log(error);
@@ -187,17 +201,17 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { nome, descricao, preco, categoria_id, marca_id, ativo } = req.body;
-    let estilo_ids = req.body['estilo_ids[]'] || req.body.estilo_ids;
-    let variantes;
+    const { name, description, price, categoryId, brandId, active } = req.body;
+    let styleIds = req.body['styleIds[]'] || req.body.styleIds;
+    let variants;
     try {
-      variantes = lerVariantes(req.body);
+      variants = readVariants(req.body);
     } catch (error) {
       return res.status(400).json({ message: error.message });
     }
 
-    let imagem_url = null;
-    if (req.file) imagem_url = await uploadImage(req.file.buffer, "produtos");
+    let imageUrl = null;
+    if (req.file) imageUrl = await uploadImage(req.file.buffer, "produtos");
 
     await client.query("BEGIN");
 
@@ -211,7 +225,7 @@ exports.updateProduct = async (req, res) => {
          marca_id = COALESCE($6, marca_id),
          ativo = COALESCE($7, ativo)
        WHERE id = $8`,
-      [nome, descricao, preco, imagem_url, categoria_id, marca_id, ativo, req.params.id]
+      [name, description, price, imageUrl, categoryId, brandId, active, req.params.id]
     );
 
     if (rowCount === 0) {
@@ -219,18 +233,18 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Produto não encontrado" });
     }
 
-    if (estilo_ids !== undefined) {
-      if (!Array.isArray(estilo_ids)) estilo_ids = [estilo_ids];
+    if (styleIds !== undefined) {
+      if (!Array.isArray(styleIds)) styleIds = [styleIds];
       await client.query("DELETE FROM produto_estilos WHERE produto_id = $1", [req.params.id]);
-      for (const estiloId of estilo_ids) {
+      for (const styleId of styleIds) {
         await client.query(
           "INSERT INTO produto_estilos (produto_id, estilo_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
-          [req.params.id, Number(estiloId)]
+          [req.params.id, Number(styleId)]
         );
       }
     }
 
-    if (variantes) await salvarVariantes(client, req.params.id, variantes);
+    if (variants) await saveVariants(client, req.params.id, variants);
 
     await client.query("COMMIT");
     return res.json({ message: "Produto atualizado" });

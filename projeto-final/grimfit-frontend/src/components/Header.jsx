@@ -57,12 +57,12 @@ export default function Header() {
                   aria-expanded={menuAberto}
                   aria-label="Menu do usuário"
                 >
-                  {user.foto_url ? <Img src={user.foto_url} alt="Foto de perfil" /> : (user.nome?.[0]?.toUpperCase() || 'U')}
+                  {user.imageUrl ? <Img src={user.imageUrl} alt="Foto de perfil" /> : (user.name?.[0]?.toUpperCase() || 'U')}
                 </button>
                 {menuAberto && (
                   <div className="nav-dropdown" role="menu">
-                    <span className="nav-dropdown-nome">{user.nome}</span>
-                    {user.tipo === 'admin' && (
+                    <span className="nav-dropdown-nome">{user.name}</span>
+                    {user.role === 'admin' && (
                       <Link to="/admin" onClick={fecharMenu} role="menuitem">Painel Admin</Link>
                     )}
                     <Link to="/perfil" onClick={fecharMenu} role="menuitem">Perfil</Link>
@@ -96,7 +96,7 @@ export default function Header() {
         <Link to="/cart" onClick={fecharMenu}>Carrinho {count > 0 ? `(${count})` : ''}</Link>
         {user ? (
           <>
-            {user.tipo === 'admin' && <Link to="/admin" onClick={fecharMenu}>Painel Admin</Link>}
+            {user.role === 'admin' && <Link to="/admin" onClick={fecharMenu}>Painel Admin</Link>}
             <Link to="/perfil" onClick={fecharMenu}>Perfil</Link>
             <a href="#" onClick={handleLogout}>Sair</a>
           </>

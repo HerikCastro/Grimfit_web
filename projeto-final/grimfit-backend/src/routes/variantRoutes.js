@@ -13,10 +13,10 @@ const {
 } = require("../controllers/variantController");
 
 // Listar/criar variação de um produto específico
-router.get("/produto/:produtoId", getVariantsByProduct);
+router.get("/product/:productId", getVariantsByProduct);
 
 router.post(
-  "/produto/:produtoId",
+  "/product/:productId",
   auth,
   admin,
   createVariant

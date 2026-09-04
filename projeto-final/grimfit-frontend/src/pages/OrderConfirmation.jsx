@@ -39,7 +39,7 @@ export default function OrderConfirmation() {
       <div className="pedido-itens">
         {pedido.itens?.map((item, i) => (
           <div key={i} className="pedido-item">
-            <span>{item.nome} x{item.quantidade}</span>
+            <span>{item.name} x{item.quantity}</span>
             <span>R$ {item.preco_unitario}</span>
           </div>
         ))}

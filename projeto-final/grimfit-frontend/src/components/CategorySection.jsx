@@ -11,7 +11,7 @@ export default function CategorySection({ title = 'Categorias', categories = [] 
         {categories.map(c => (
           <Link
             key={c.id}
-            to={`/catalog?categoria_id=${c.id}`}
+            to={`/catalog?categoryId=${c.id}`}
             className="category-tile"
           >
             <div className="cat-image">

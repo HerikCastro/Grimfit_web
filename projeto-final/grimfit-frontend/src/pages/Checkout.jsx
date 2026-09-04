@@ -128,8 +128,8 @@ export default function Checkout() {
           <h3>Resumo</h3>
           {items.map(item => (
             <div key={item.id} className="resumo-item">
-              <span>{item.nome} x{item.quantidade}</span>
-              <span>{formatCurrency(item.preco * item.quantidade)}</span>
+              <span>{item.name} x{item.quantity}</span>
+              <span>{formatCurrency(item.price * item.quantity)}</span>
             </div>
           ))}
           <div className="summary-line"><span>Subtotal</span><strong>{formatCurrency(total)}</strong></div>
