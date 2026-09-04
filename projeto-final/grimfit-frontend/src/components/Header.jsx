@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/grimfit-logo.png'
@@ -9,11 +9,21 @@ export default function Header() {
   const { count } = useCart()
   const { user, logout } = useAuth()
   const isAdmin = user?.role === 'admin' || user?.tipo === 'admin'
+  const location = useLocation()
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
 
   function fecharMenu() { setMenuAberto(false) }
   function alternarMenu() { setMenuAberto(a => !a) }
+
+  function handleLogoClick(e) {
+    fecharMenu()
+    if (location.pathname === '/') {
+      e.preventDefault()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      window.location.reload()
+    }
+  }
 
   function handleLogout(e) {
     e.preventDefault()
@@ -33,7 +43,7 @@ export default function Header() {
           </ul>
         </nav>
 
-        <Link to="/" className="logo-centro" onClick={fecharMenu}>
+        <Link to="/" className="logo-centro" onClick={handleLogoClick}>
           <img src={logo} alt="GRIMFIT" className="logo-imagem" />
         </Link>
 

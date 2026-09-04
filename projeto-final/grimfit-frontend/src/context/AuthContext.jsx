@@ -37,6 +37,7 @@ export function AuthProvider({ children }) {
 
       setAuthToken(data.token)
       setToken(data.token)
+      setUser(normalizeUser(data.user))
       try {
         // Busca o perfil atualizado em vez de confiar cegamente no que
         // ficou salvo (pode ter mudado tipo/nome no banco). Nunca deixa
@@ -49,6 +50,10 @@ export function AuthProvider({ children }) {
           )
         ])
         setUser(normalizeUser(perfil))
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          token: data.token,
+          user: normalizeUser(perfil)
+        }))
       } catch (e) {
         // Só derruba a sessão salva se o servidor realmente disse que o
         // token é inválido/expirado (401). Se foi só timeout, erro de
@@ -57,6 +62,7 @@ export function AuthProvider({ children }) {
         // funcionar no próximo carregamento, sem forçar login de novo.
         if (e?.response?.status === 401) {
           localStorage.removeItem(STORAGE_KEY)
+          setUser(null)
           setAuthToken(null)
           setToken(null)
         }

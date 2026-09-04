@@ -15,7 +15,7 @@ export default function RequireAuth({ children, adminOnly = false }) {
 
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />
 
-  if (adminOnly && user.tipo !== 'admin') {
+  if (adminOnly && user.role !== 'admin' && user.tipo !== 'admin') {
     return (
       <div className="acesso-negado">
         <h2>Acesso restrito</h2>

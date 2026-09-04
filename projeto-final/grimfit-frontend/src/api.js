@@ -4,6 +4,20 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+const AUTH_STORAGE_KEY = 'grimfit_auth_v1';
+
+API.interceptors.request.use((config) => {
+  if (!config.headers?.Authorization) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}');
+      if (stored.token) config.headers.Authorization = `Bearer ${stored.token}`;
+    } catch {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    }
+  }
+  return config;
+});
+
 export function setAuthToken(token) {
   if (token) API.defaults.headers.common['Authorization'] = `Bearer ${token}`
   else delete API.defaults.headers.common['Authorization']
