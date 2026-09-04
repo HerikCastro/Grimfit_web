@@ -66,10 +66,11 @@ export default function Home() {
       {destaque ? (
         <Hero product={{
           id: destaque.id,
-          title: destaque.nome,
-          subtitle: destaque.descricao,
-          price: destaque.preco,
-          image: destaque.imagem_url
+          title: destaque.name || destaque.nome,
+          subtitle: destaque.description || destaque.descricao,
+          price: destaque.price ?? destaque.preco,
+          imageUrl: destaque.imageUrl || destaque.imagem_url,
+          brand: destaque.brandName || destaque.marca_nome
         }} />
       ) : carregando ? (
         <section className="hero hero-skeleton" aria-hidden="true">
