@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 export default function Hero({ product }){
   const [imageFailed, setImageFailed] = useState(false)
   const image = product?.imageUrl || product?.image
-  const variants = product?.variants || product?.variations || []
+  const variants = Array.isArray(product?.variants)
+    ? product.variants
+    : Array.isArray(product?.variations) ? product.variations : []
   const variantPrices = variants
     .map(variant => Number(variant.price ?? variant.preco))
     .filter(Number.isFinite)

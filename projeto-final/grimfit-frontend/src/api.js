@@ -56,7 +56,7 @@ export async function changePassword(payload) {
 // Accepted query parameters: search, categoryId, brandId, styleId, minPrice, maxPrice, sort, page, limit
 export async function getProducts(params = {}) {
   const res = await API.get('/api/products', { params })
-  return res.data // { produtos, pagina, por_pagina }
+  return res.data // { products, page, perPage }
 }
 
 export async function getProduct(id) {
@@ -121,7 +121,7 @@ export async function adminUpdateStyle(id, payload) {
 }
 
 export async function adminDeleteStyle(id, confirmPassword) {
-  const res = await API.delete(`/api/styles/${id}`, { data: { confirmationPassword: confirmPassword } })
+  const res = await API.delete(`/api/styles/${id}`, { data: { confirmacao_senha: confirmPassword } })
   return res.data
 }
 

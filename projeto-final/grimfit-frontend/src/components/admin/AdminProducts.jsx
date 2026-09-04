@@ -33,7 +33,7 @@ export default function AdminProducts() {
   async function carregar() {
     try {
       const res = await getProducts({ limit: 100 })
-      setProdutos(res.products || [])
+      setProdutos(Array.isArray(res?.products) ? res.products : [])
     } catch (e) { console.error(e) }
   }
 
