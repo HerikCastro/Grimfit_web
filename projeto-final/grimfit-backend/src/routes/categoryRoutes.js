@@ -23,7 +23,7 @@ router.post(
   "/",
   auth,
   admin,
-  upload.single("imagem"),
+  upload.single("image"),
   createCategory
 );
 
@@ -31,7 +31,7 @@ router.put(
   "/:id",
   auth,
   admin,
-  upload.single("imagem"),
+  upload.single("image"),
   updateCategory
 );
 

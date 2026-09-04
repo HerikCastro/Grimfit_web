@@ -67,9 +67,13 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    const imageUrl = req.file
-      ? await uploadImage(req.file.buffer, "usuarios")
-      : null;
+    let imageUrl = null;
+    if (req.file) {
+      if (!req.file.buffer || req.file.buffer.length === 0) {
+        throw new Error("Avatar upload did not contain image data");
+      }
+      imageUrl = await uploadImage(req.file.buffer, "usuarios");
+    }
 
     const { rows: users } = await pool.query(
       `
@@ -102,7 +106,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(409).json({ message: "E-mail já cadastrado" });
     }
 
-    console.log(error);
+    console.error("Profile update failed:", error);
 
     return res.status(500).json({
       message: "Erro interno"

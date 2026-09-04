@@ -26,13 +26,13 @@ exports.createCategory = async (req, res) => {
   try {
     const { nome } = req.body;
     if (!nome || !nome.trim()) return res.status(400).json({ message: "Nome é obrigatório" });
-    if (!req.file) return res.status(400).json({ message: "Imagem é obrigatória" });
-
-    const imagem_url = await uploadImage(req.file.buffer, "categorias");
+    const imageUrl = req.file
+      ? await uploadImage(req.file.buffer, "categorias")
+      : null;
 
     await pool.query(
       "INSERT INTO categorias(nome, imagem_url) VALUES($1,$2)",
-      [nome.trim(), imagem_url]
+      [nome.trim(), imageUrl]
     );
     return res.status(201).json({ message: "Categoria criada" });
   } catch (error) {
@@ -47,14 +47,14 @@ exports.updateCategory = async (req, res) => {
     const { nome } = req.body;
     if (!nome || !nome.trim()) return res.status(400).json({ message: "Nome é obrigatório" });
 
-    let imagem_url = null;
-    if (req.file) imagem_url = await uploadImage(req.file.buffer, "categorias");
+    let imageUrl = null;
+    if (req.file) imageUrl = await uploadImage(req.file.buffer, "categorias");
 
     const { rowCount } = await pool.query(
       `UPDATE categorias
        SET nome = $1, imagem_url = COALESCE($2, imagem_url)
        WHERE id = $3`,
-      [nome.trim(), imagem_url, req.params.id]
+      [nome.trim(), imageUrl, req.params.id]
     );
     if (rowCount === 0) return res.status(404).json({ message: "Categoria não encontrada" });
     return res.json({ message: "Categoria atualizada" });

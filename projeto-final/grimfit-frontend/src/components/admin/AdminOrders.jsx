@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { adminGetOrders, adminUpdateOrderStatus } from '../../api'
 import { useToast } from '../ToastContext'
+import ConfirmModal from '../ui/ConfirmModal'
 
 const STATUS_OPCOES = ['pendente', 'pago', 'separacao', 'enviado', 'saiu_entrega', 'entregue', 'cancelado']
 
@@ -8,6 +9,8 @@ export default function AdminOrders() {
   const { show } = useToast()
   const [pedidos, setPedidos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [alteracaoPendente, setAlteracaoPendente] = useState(null)
+  const [salvandoStatus, setSalvandoStatus] = useState(false)
 
   useEffect(() => { carregar() }, [])
 
@@ -22,18 +25,36 @@ export default function AdminOrders() {
     }
   }
 
-  async function handleStatus(id, status) {
+  function handleStatus(id, status) {
+    setAlteracaoPendente({ id, status })
+  }
+
+  async function confirmarStatus() {
+    if (!alteracaoPendente) return
+    setSalvandoStatus(true)
     try {
-      await adminUpdateOrderStatus(id, status)
+      await adminUpdateOrderStatus(alteracaoPendente.id, alteracaoPendente.status)
       show('Status atualizado', 'success')
+      setAlteracaoPendente(null)
       await carregar()
     } catch (err) {
       show(err?.response?.data?.message || 'Erro ao atualizar status', 'error')
+    } finally {
+      setSalvandoStatus(false)
     }
   }
 
   return (
     <div className="admin-secao">
+      {alteracaoPendente && (
+        <ConfirmModal
+          mensagem={`Tem certeza que deseja alterar o status do pedido #${alteracaoPendente.id} para ${alteracaoPendente.status}?`}
+          onConfirm={confirmarStatus}
+          onCancel={() => setAlteracaoPendente(null)}
+          loading={salvandoStatus}
+          requirePassword={false}
+        />
+      )}
       <h3>Pedidos</h3>
       {carregando ? (
         <p className="muted">Carregando...</p>

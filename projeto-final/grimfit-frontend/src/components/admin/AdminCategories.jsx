@@ -31,12 +31,11 @@ export default function AdminCategories() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!editandoId && !file) { show('Imagem é obrigatória', 'error'); return }
     setSalvando(true)
     try {
       const fd = new FormData()
       fd.append('nome', form.nome)
-      if (file) fd.append('imagem', file)
+      if (file) fd.append('image', file)
       if (editandoId) await adminUpdateCategory(editandoId, fd)
       else await adminCreateCategory(fd)
       show('Categoria salva', 'success')
@@ -76,7 +75,7 @@ export default function AdminCategories() {
           <input value={form.nome} onChange={e => setForm({ nome: e.target.value })} required />
         </div>
         <div className="form-campo">
-          <label>Imagem {!editandoId && <span className="campo-obrigatorio">*</span>}</label>
+          <label>Imagem (opcional)</label>
           <input type="file" accept="image/*" onChange={handleFile} className="input-file" />
           {preview && <Img src={preview} alt="preview" className="admin-preview" />}
         </div>
