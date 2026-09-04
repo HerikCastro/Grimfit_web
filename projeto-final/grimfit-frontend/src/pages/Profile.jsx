@@ -21,6 +21,8 @@ const STATUS_LABEL = {
 export default function Profile() {
   const { user, updateUser } = useAuth()
   const { show } = useToast()
+  const effectiveRole = user?.role || user?.tipo
+  const isAdmin = effectiveRole === 'admin'
 
   const [form, setForm] = useState({ name: '', email: '', phone: '', gender: '' })
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' })
@@ -107,8 +109,8 @@ export default function Profile() {
         <div>
           <h1 className="profile-nome">{user?.name}</h1>
           <span className="profile-email muted">{user?.email}</span>
-          {user?.role !== 'cliente' && (
-            <span className="profile-badge">{user?.role}</span>
+          {effectiveRole !== 'cliente' && (
+            <span className="profile-badge">{effectiveRole}</span>
           )}
         </div>
       </div>
@@ -124,7 +126,7 @@ export default function Profile() {
         </div>
         <div className="profile-stat">
           <span>Plano</span>
-          <strong>{user?.role === 'admin' ? 'Admin' : 'Cliente'}</strong>
+          <strong>{isAdmin ? 'Admin' : 'Cliente'}</strong>
         </div>
       </div>
 
@@ -179,7 +181,7 @@ export default function Profile() {
                       name="genero"
                       value={g.value}
                       checked={form.gender === g.value}
-                      onChange={() => setForm(f => ({ ...f, genero: g.value }))}
+                      onChange={() => setForm(f => ({ ...f, gender: g.value }))}
                     />
                     {g.label}
                   </label>

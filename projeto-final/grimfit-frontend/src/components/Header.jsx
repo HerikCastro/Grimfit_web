@@ -8,6 +8,7 @@ import Img from './Img'
 export default function Header() {
   const { count } = useCart()
   const { user, logout } = useAuth()
+  const isAdmin = user?.role === 'admin' || user?.tipo === 'admin'
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
 
@@ -62,7 +63,7 @@ export default function Header() {
                 {menuAberto && (
                   <div className="nav-dropdown" role="menu">
                     <span className="nav-dropdown-nome">{user.name}</span>
-                    {user.role === 'admin' && (
+                    {isAdmin && (
                       <Link to="/admin" onClick={fecharMenu} role="menuitem">Painel Admin</Link>
                     )}
                     <Link to="/perfil" onClick={fecharMenu} role="menuitem">Perfil</Link>
@@ -96,7 +97,7 @@ export default function Header() {
         <Link to="/cart" onClick={fecharMenu}>Carrinho {count > 0 ? `(${count})` : ''}</Link>
         {user ? (
           <>
-            {user.role === 'admin' && <Link to="/admin" onClick={fecharMenu}>Painel Admin</Link>}
+            {isAdmin && <Link to="/admin" onClick={fecharMenu}>Painel Admin</Link>}
             <Link to="/perfil" onClick={fecharMenu}>Perfil</Link>
             <a href="#" onClick={handleLogout}>Sair</a>
           </>

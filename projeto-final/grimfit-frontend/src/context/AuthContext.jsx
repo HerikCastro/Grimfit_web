@@ -4,6 +4,11 @@ import { loginUser, registerUser, setAuthToken, getMe } from '../api'
 const AuthContext = createContext()
 const STORAGE_KEY = 'grimfit_auth_v1'
 
+function normalizeUser(user) {
+  if (!user) return user
+  return { ...user, role: user.role || user.tipo }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
@@ -43,7 +48,7 @@ export function AuthProvider({ children }) {
             setTimeout(() => reject(new Error('TIMEOUT_AUTH')), 8000)
           )
         ])
-        setUser(perfil)
+        setUser(normalizeUser(perfil))
       } catch (e) {
         // Só derruba a sessão salva se o servidor realmente disse que o
         // token é inválido/expirado (401). Se foi só timeout, erro de
@@ -65,10 +70,11 @@ export function AuthProvider({ children }) {
   async function login(credentials) {
     const res = await loginUser(credentials)
     if (res.ok) {
-      setUser(res.user)
+      const normalizedUser = normalizeUser(res.user)
+      setUser(normalizedUser)
       setToken(res.token)
       setAuthToken(res.token)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token, user: res.user }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.token, user: normalizedUser }))
     }
     return res
   }
@@ -87,7 +93,7 @@ export function AuthProvider({ children }) {
   function updateUser(updates) {
     setUser(current => {
       if (!current) return current
-      const updated = { ...current, ...updates }
+      const updated = normalizeUser({ ...current, ...updates })
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...stored, user: updated }))
       return updated
