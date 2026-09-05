@@ -155,12 +155,12 @@ export default function AdminProducts() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-campo">
+      <form onSubmit={handleSubmit} className="admin-form admin-produto-form">
+        <div className="form-campo admin-campo-nome">
           <label htmlFor="p-nome">Nome</label>
           <input id="p-nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
         </div>
-        <div className="form-campo">
+        <div className="form-campo admin-campo-descricao">
           <label htmlFor="p-desc">Descrição</label>
           <Textarea
             id="p-desc"
@@ -169,7 +169,7 @@ export default function AdminProducts() {
             placeholder="Descreva o produto..."
           />
         </div>
-        <div className="admin-form-row">
+        <div className="admin-form-row admin-campo-detalhes">
           <div className="form-campo">
             <label htmlFor="p-preco">Preço (R$)</label>
             <input id="p-preco" type="number" step="0.01" min="0" value={form.price}
@@ -191,7 +191,7 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        <div className="form-campo">
+        <div className="form-campo admin-campo-estilos">
           <label>Estilos <span className="campo-obrigatorio">*</span></label>
           <div className="estilos-grid compact">
             {estilos.map(e => (
@@ -208,13 +208,13 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        <div className="form-campo">
+        <div className="form-campo admin-campo-imagem">
           <label>Imagem {editandoId ? '(opcional — só se quiser trocar)' : <span className="campo-obrigatorio">*</span>}</label>
           <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFile} className="input-file" />
           {preview && <Img src={preview} alt="preview" className="admin-preview" />}
         </div>
 
-        <div className="form-campo">
+        <div className="form-campo admin-campo-variantes">
           <label>Variantes (Cor, Tamanho e Estoque)</label>
           <div className="admin-form-variantes">
             {form.variants.map((variant, index) => (
@@ -244,7 +244,7 @@ export default function AdminProducts() {
           </div>
         </div>
 
-        <div className="admin-form-acoes">
+        <div className="admin-form-acoes admin-campo-acoes">
           <button type="submit" className="btn primary" disabled={salvando}>
             {salvando ? 'Salvando...' : editandoId ? 'Salvar' : 'Criar produto'}
           </button>

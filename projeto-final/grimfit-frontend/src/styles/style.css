@@ -2247,6 +2247,79 @@ input:not([type=file]):focus,.ui-textarea:focus,select:focus {
   .profile-aba { padding: 8px 10px; font-size: 12px; }
 }
 
+@media (min-width:769px) {
+  .admin-page {
+    width: min(100%, 1180px);
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 1rem 0;
+  }
+  .admin-header { margin-bottom: 12px; padding: 12px 16px; }
+  .admin-header h1 { font-size: 22px; }
+  .admin-header p { font-size: 12px; }
+  .admin-abas {
+    flex-wrap: nowrap;
+    gap: 2px;
+    padding: 4px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+  }
+  .admin-aba {
+    flex: 1 0 auto;
+    white-space: nowrap;
+    padding: .4rem .8rem;
+    font-size: 12px;
+  }
+  .admin-secao { padding: 12px; }
+  .admin-secao h3 { margin-top: 16px; margin-bottom: 10px; padding-bottom: 5px; font-size: 15px; }
+  .admin-aviso { margin-bottom: 12px; padding: 8px 12px; font-size: 12px; }
+  .admin-produto-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "nome detalhes"
+      "descricao detalhes"
+      "imagem estilos"
+      "variantes variantes"
+      "acoes acoes";
+    gap: 1.25rem;
+    max-width: none;
+  }
+  .admin-produto-form .admin-campo-nome { grid-area: nome; }
+  .admin-produto-form .admin-campo-descricao { grid-area: descricao; }
+  .admin-produto-form .admin-campo-detalhes { grid-area: detalhes; grid-template-columns: 1fr; gap: .75rem; }
+  .admin-produto-form .admin-campo-imagem { grid-area: imagem; }
+  .admin-produto-form .admin-campo-estilos { grid-area: estilos; }
+  .admin-produto-form .admin-campo-variantes { grid-area: variantes; }
+  .admin-produto-form .admin-campo-acoes { grid-area: acoes; }
+  .admin-produto-form .form-campo { gap: 4px; }
+  .admin-produto-form .form-campo label { font-size: 12px; }
+  .admin-produto-form input,
+  .admin-produto-form select { min-height: 38px; height: 38px; padding: 7px 10px; }
+  .admin-produto-form .ui-textarea { min-height: 90px; height: 90px; padding: 8px 10px; }
+  .admin-produto-form .input-file { height: auto; min-height: 38px; }
+  .admin-produto-form .estilos-grid { gap: 6px; margin-bottom: 0; }
+  .admin-produto-form .estilo-chip { padding: 6px 9px; font-size: 12px; }
+  .admin-produto-form .admin-form-variantes { gap: 6px; }
+  .admin-produto-form .admin-form-variante { gap: 6px; padding: 6px; }
+  .admin-produto-form .admin-form-variante input { min-height: 36px; height: 36px; }
+  .admin-produto-form .admin-form button,
+  .admin-produto-form .admin-form-acoes button,
+  .admin-produto-form .btn { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+  .admin-form-acoes { gap: 8px; margin-top: 0; }
+}
+
+@media (max-width:768px) {
+  .admin-page { width: 100%; max-width: 100%; padding: 1rem 0; }
+  .admin-abas { overflow-x: auto; flex-wrap: nowrap; }
+  .admin-aba { white-space: nowrap; }
+  .admin-produto-form { display: flex; flex-direction: column; gap: 12px; max-width: none; }
+  .admin-produto-form .admin-form-row { grid-template-columns: 1fr; }
+  .admin-produto-form input,
+  .admin-produto-form select { min-height: 40px; }
+  .admin-produto-form .ui-textarea { min-height: 90px; }
+}
+
 .home-intro-strip {
   display:flex;
   align-items:center;
