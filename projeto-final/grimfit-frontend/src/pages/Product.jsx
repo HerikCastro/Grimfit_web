@@ -135,18 +135,20 @@ export default function Product() {
 
   return (
     <div className="product-page">
-      <div className="gallery">
-        <div className="main-image">
-          <Img src={produto.imageUrl} alt={produto.name} />
-        </div>
-      </div>
-      <div className="details">
+      <div className="produto-cabecalho">
         <div className="produto-titulo-linha">
           <h1>{produto.name}</h1>
           <button className="botao-favorito" onClick={handleFavorito} aria-pressed={favoritado}>
             {favoritado ? '★ Favoritado' : '☆ Favoritar'}
           </button>
         </div>
+      </div>
+      <div className="gallery">
+        <div className="main-image">
+          <Img src={produto.imageUrl} alt={produto.name} />
+        </div>
+      </div>
+      <div className="details">
         <div className="product-price">R$ {produto.price}</div>
         {produto.styles && produto.styles.length > 0 && (
           <div className="tags-estilo">
