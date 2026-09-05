@@ -12,6 +12,30 @@ exports.createOrder = async (req, res) => {
 
     await client.query("BEGIN");
 
+    if (!endereco_id) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "endereco_id é obrigatório"
+      });
+    }
+
+    const { rows: enderecos } = await client.query(
+      `
+      SELECT id
+      FROM enderecos
+      WHERE id = $1
+      AND usuario_id = $2
+      `,
+      [endereco_id, req.user.id]
+    );
+
+    if (enderecos.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        message: "Endereço não encontrado para este usuário"
+      });
+    }
+
     const { rows: cart } = await client.query(`
       SELECT
         ic.id AS item_carrinho_id,

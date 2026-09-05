@@ -148,17 +148,13 @@ export async function getCategories() {
   return res.data
 }
 
-export async function adminCreateCategory(formData) {
-  const res = await API.post('/api/categories', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+export async function adminCreateCategory(payload) {
+  const res = await API.post('/api/categories', payload)
   return res.data
 }
 
-export async function adminUpdateCategory(id, formData) {
-  const res = await API.put(`/api/categories/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+export async function adminUpdateCategory(id, payload) {
+  const res = await API.put(`/api/categories/${id}`, payload)
   return res.data
 }
 

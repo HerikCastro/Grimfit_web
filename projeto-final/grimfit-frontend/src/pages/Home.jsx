@@ -52,7 +52,7 @@ export default function Home() {
   }, [])
 
   const brandsParaCarousel = marcas.map(m => ({ id: m.id, name: m.nome, logo: m.imagem_url }))
-  const categoriasParaSecao = categorias.map(c => ({ id: c.id, name: c.nome, image: c.imagem_url }))
+  const categoriasParaSecao = categorias.map(c => ({ id: c.id, name: c.nome }))
 
   const destaque = produtos[0]
 

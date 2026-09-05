@@ -69,7 +69,7 @@ export default function Product() {
       show('Adicionado ao carrinho', 'success')
     } catch (e) {
       console.error(e)
-      show('Erro ao adicionar ao carrinho', 'error')
+      show(e?.response?.data?.message || 'Erro ao adicionar ao carrinho', 'error')
     } finally {
       setAdicionando(false)
     }

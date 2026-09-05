@@ -9,7 +9,7 @@ export default function BrandsCarousel({ brands = [] }) {
     <section style={{ margin: '32px 0' }}>
       <div className="nov-header">
         <h2 className="secao-titulo">Marcas</h2>
-        <div>
+        <div className="nov-controls">
           <button className="nov-arrow" onClick={() => ref.current?.scrollBy({ left: -200, behavior: 'smooth' })} aria-label="Anterior">‹</button>
           <button className="nov-arrow" onClick={() => ref.current?.scrollBy({ left: 200, behavior: 'smooth' })} aria-label="Próxima">›</button>
         </div>

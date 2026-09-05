@@ -205,6 +205,7 @@ exports.getPreferences = async (req, res) => {
 };
 
 exports.setPreferences = async (req, res) => {
+  const client = await pool.connect();
 
   try {
 
@@ -216,13 +217,15 @@ exports.setPreferences = async (req, res) => {
       });
     }
 
-    await pool.query(
+    await client.query("BEGIN");
+
+    await client.query(
       "DELETE FROM usuario_estilos_preferidos WHERE usuario_id = $1",
       [req.user.id]
     );
 
     for (const styleId of styleIds) {
-      await pool.query(
+      await client.query(
         `
         INSERT INTO usuario_estilos_preferidos (usuario_id, estilo_id)
         VALUES ($1, $2)
@@ -232,16 +235,19 @@ exports.setPreferences = async (req, res) => {
       );
     }
 
-    await pool.query(
+    await client.query(
       "UPDATE usuarios SET preferencias_definidas = TRUE WHERE id = $1",
       [req.user.id]
     );
+
+    await client.query("COMMIT");
 
     return res.json({
       message: "Preferências salvas"
     });
 
   } catch (error) {
+    await client.query("ROLLBACK");
 
     console.log(error);
 
@@ -249,6 +255,8 @@ exports.setPreferences = async (req, res) => {
       message: "Erro interno"
     });
 
+  } finally {
+    client.release();
   }
 
 };

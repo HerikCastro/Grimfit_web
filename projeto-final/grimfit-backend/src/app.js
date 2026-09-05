@@ -116,8 +116,8 @@ app.use((err, req, res, next) => {
 
   if (err) {
     console.log(err);
-    return res.status(400).json({
-      message: err.message || "Erro na requisição"
+    return res.status(500).json({
+      message: "Erro interno do servidor"
     });
   }
 
