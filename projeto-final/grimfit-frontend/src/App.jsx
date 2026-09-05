@@ -59,9 +59,11 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <CartProvider>
-          <ToastProvider>
-            <AppContent />
-          </ToastProvider>
+              <FavoritesProvider>
+                <ToastProvider>
+                  <AppContent />
+                </ToastProvider>
+              </FavoritesProvider>
         </CartProvider>
       </AuthProvider>
     </ErrorBoundary>

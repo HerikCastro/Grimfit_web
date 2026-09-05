@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getProduct, getVariants, getFavorites, addFavorite, removeFavorite, getReviews, createReview } from '../api'
+import { getProduct, getVariants, getReviews, createReview } from '../api'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/ToastContext'
 import Img from '../components/Img'
+import { useFavorites } from '../context/FavoritesContext'
 
 export default function Product() {
   const { id } = useParams()
@@ -12,6 +13,7 @@ export default function Product() {
   const { user } = useAuth()
   const { addItem, items: cartItems } = useCart()
   const { show } = useToast()
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   const [produto, setProduto] = useState(null)
   const [variacoes, setVariacoes] = useState([])
@@ -19,7 +21,6 @@ export default function Product() {
   const [tamanhoSelecionado, setTamanhoSelecionado] = useState('')
   const [quantidade, setQuantidade] = useState(1)
   const [adicionando, setAdicionando] = useState(false)
-  const [favoritado, setFavoritado] = useState(false)
   const [reviews, setReviews] = useState([])
   const [novaAvaliacao, setNovaAvaliacao] = useState({ nota: 5, comentario: '' })
 
@@ -37,10 +38,6 @@ export default function Product() {
         const r = await getReviews(id)
         setReviews(r || [])
 
-        if (user) {
-          const favs = await getFavorites()
-          setFavoritado((favs || []).some(f => f.id === Number(id)))
-        }
       } catch (e) {
         console.error(e)
       }
@@ -82,15 +79,9 @@ export default function Product() {
       return
     }
     try {
-      if (favoritado) {
-        await removeFavorite(id)
-        setFavoritado(false)
-      } else {
-        await addFavorite(Number(id))
-        setFavoritado(true)
-      }
+      await toggleFavorite(produto)
     } catch (e) {
-      show('Erro ao atualizar favorito', 'error')
+      show(e?.response?.data?.message || 'Erro ao atualizar favorito', 'error')
     }
   }
 
@@ -124,6 +115,7 @@ export default function Product() {
   const estoqueDisponivel = Number(variacaoEscolhida?.stock) || 0
   const estoqueRestante = Math.max(0, estoqueDisponivel - quantidadeNoCarrinho)
   const semEstoque = !variacaoEscolhida || estoqueRestante <= 0
+  const favoritado = isFavorite(id)
 
   function corDisponivel(cor) {
     return variacoes.some(v =>

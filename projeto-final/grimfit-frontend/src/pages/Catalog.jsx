@@ -6,11 +6,6 @@ import Pagination from '../components/ui/Pagination'
 import { getProducts, getCategories, getBrands, getStyles } from '../api'
 import { ensureArray } from '../utils/normalizeCollection'
 
-const ABAS_CATALOG = [
-  { chave: 'loja', rotulo: 'Loja' },
-  { chave: 'estilos', rotulo: 'Estilos' }
-]
-
 export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -80,17 +75,6 @@ export default function Catalog() {
     setSearchParams(p)
   }
 
-  function trocarAba(chave) {
-    const p = new URLSearchParams(searchParams)
-    p.set('aba', chave)
-    // Evita manter um filtro invisível ativo ao trocar de aba (ex: um
-    // estilo selecionado continuando a filtrar a Loja sem aparecer
-    // marcado em lugar nenhum na tela).
-    if (chave === 'loja') p.delete('styleId')
-    else p.delete('categoryId')
-    setSearchParams(p)
-  }
-
   function handleBusca(e) {
     e.preventDefault()
     atualizar('search', e.target.elements.search.value)
@@ -98,21 +82,6 @@ export default function Catalog() {
 
   return (
     <div className="catalog-page">
-      {/* abas Loja / Estilos */}
-      <div className="catalog-abas" role="tablist">
-        {ABAS_CATALOG.map(a => (
-          <button
-            key={a.chave}
-            role="tab"
-            aria-selected={aba === a.chave}
-            className={`catalog-aba ${aba === a.chave ? 'ativa' : ''}`}
-            onClick={() => trocarAba(a.chave)}
-          >
-            {a.rotulo}
-          </button>
-        ))}
-      </div>
-
       <div className="filtros">
         <form onSubmit={handleBusca} className="filtro-busca">
           <input name="search" placeholder="Buscar produto..." defaultValue={search} />

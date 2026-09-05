@@ -4,17 +4,26 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import logo from '../assets/grimfit-logo.png'
 import Img from './Img'
+import FavoritesDrawer from './FavoritesDrawer'
+import { useFavorites } from '../context/FavoritesContext'
 
 export default function Header() {
   const { count } = useCart()
+  const { count: favoritesCount } = useFavorites()
   const { user, logout } = useAuth()
   const isAdmin = user?.role === 'admin' || user?.tipo === 'admin'
   const location = useLocation()
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
+  const [favoritosAbertos, setFavoritosAbertos] = useState(false)
 
   function fecharMenu() { setMenuAberto(false) }
   function alternarMenu() { setMenuAberto(a => !a) }
+
+  function abrirFavoritos() {
+    fecharMenu()
+    setFavoritosAbertos(true)
+  }
 
   function handleLogoClick(e) {
     fecharMenu()
@@ -47,8 +56,14 @@ export default function Header() {
           <img src={logo} alt="GRIMFIT" className="logo-imagem" />
         </Link>
 
-        <nav className="nav-direita" aria-label="Conta e carrinho">
+        <nav className="nav-direita" aria-label="Conta, favoritos e carrinho">
           <ul className="nav-links">
+            <li>
+              <button type="button" className="nav-favoritos" onClick={abrirFavoritos} aria-label={`Favoritos com ${favoritesCount} itens`}>
+                <span className="nav-favoritos-icon" aria-hidden="true">♥</span>
+                {favoritesCount > 0 && <span className="badge-count">{favoritesCount}</span>}
+              </button>
+            </li>
             <li>
               <Link to="/cart" onClick={fecharMenu} className="nav-carrinho" aria-label={`Carrinho com ${count} itens`}>
                 <span className="nav-carrinho-icon" aria-hidden="true">
@@ -104,6 +119,7 @@ export default function Header() {
       <div id="menu-mobile" className={`menu-mobile ${menuAberto ? 'menu-aberto' : ''}`}>
         <Link to="/catalog" onClick={fecharMenu}>Loja</Link>
         <Link to="/catalog?aba=estilos" onClick={fecharMenu}>Estilos</Link>
+        <button type="button" className="menu-mobile-acao" onClick={abrirFavoritos}>Favoritos {favoritesCount > 0 ? `(${favoritesCount})` : ''}</button>
         <Link to="/cart" onClick={fecharMenu}>Carrinho {count > 0 ? `(${count})` : ''}</Link>
         {user ? (
           <>
@@ -115,6 +131,7 @@ export default function Header() {
           <Link to="/login" onClick={fecharMenu}>Entrar</Link>
         )}
       </div>
+      <FavoritesDrawer open={favoritosAbertos} onClose={() => setFavoritosAbertos(false)} />
     </header>
   )
 }
