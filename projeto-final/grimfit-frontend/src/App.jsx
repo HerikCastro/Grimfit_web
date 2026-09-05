@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import LoadingScreen from './components/LoadingScreen'
 import ErrorBoundary from './components/ErrorBoundary'
 import { CartProvider } from './context/CartContext'
+import { FavoritesProvider } from './context/FavoritesContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import RequireAuth from './components/RequireAuth'
 import { ToastProvider } from './components/ToastContext'
@@ -59,11 +60,11 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <CartProvider>
-              <FavoritesProvider>
-                <ToastProvider>
-                  <AppContent />
-                </ToastProvider>
-              </FavoritesProvider>
+          <FavoritesProvider>
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
+          </FavoritesProvider>
         </CartProvider>
       </AuthProvider>
     </ErrorBoundary>
