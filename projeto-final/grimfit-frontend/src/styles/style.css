@@ -45,6 +45,7 @@ body {
   font-family: var(--font);
   font-size: 15px;
   line-height: 1.6;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,7 +57,7 @@ input, select, textarea { font-family: inherit }
 /* ── Layout ── */
 .container { max-width: var(--container); margin: 0 auto; padding: 0 16px }
 .app-root { min-height: 100vh; display: flex; flex-direction: column }
-main.container { flex: 1; padding-top: 24px; padding-bottom: 48px }
+main.container { flex: 1; padding-top: 24px; padding-bottom: 48px; overflow-x: hidden }
 
 /* ── Fundo com marca ── */
 .fundo-marca { position: relative }
@@ -641,7 +642,8 @@ input[disabled] { opacity: 0.5; cursor: not-allowed }
 }
 .product-image img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   transition: transform 0.4s;
 }
 .product-card:hover .product-image img { transform: scale(1.04) }
@@ -1739,7 +1741,7 @@ main.container { max-width: 1380px; padding-top: 28px; }
 }
 .hero-content { min-width: 0; padding:10px 0; }
 .hero-content::before {
-  content:"GRIMFIT / DROP";
+  content:"GRIMFIT / LANÇAMENTO";
   display:inline-flex;
   margin-bottom:18px;
   padding:7px 11px;
@@ -2116,7 +2118,7 @@ input:not([type=file]):focus,.ui-textarea:focus,select:focus {
   .filtros { grid-template-columns:1fr 1fr; }
   .filtro-busca { grid-column:1/-1; }
 }
-@media (max-width:767px) {
+@media (max-width:768px) {
   main.container { padding-top:18px; }
   .cabecalho-topo { min-height:110px; }
   .logo-imagem { height:90px; max-width:100%; }
@@ -2130,9 +2132,23 @@ input:not([type=file]):focus,.ui-textarea:focus,select:focus {
   .hero-content .lead { font-size:14px; }
   .hero {
     grid-template-columns:1fr;
-    gap:22px;
+    gap:16px;
   }
-  .hero-visual .shoe { height:auto; }
+  .hero-content { padding:4px 0; }
+  .hero-content h1 { font-size:clamp(32px, 10vw, 42px); }
+  .hero-cta { gap:12px; margin-top:18px; }
+  .hero .price { font-size:18px; }
+  .hero-visual .shoe {
+    width:100%;
+    height:280px;
+    max-height:280px;
+  }
+  .hero-visual .shoe img {
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    object-position:center;
+  }
   .nov-item { flex-basis:calc((100% - 12px) / 2); }
   .hero::before { width:280px; height:280px; right:-80px; }
   .filtros {

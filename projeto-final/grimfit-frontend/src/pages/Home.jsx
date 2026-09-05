@@ -60,8 +60,8 @@ export default function Home() {
     <div className="home-page">
       <div className="home-intro-strip">
         <span>GRIMFIT</span>
-        <span>STREETWEAR / GOTH / SK8 / SPORTLIFE</span>
-        <span>EXPLORE O DROP ↓</span>
+        <span>MODA URBANA / GÓTICA / SK8 / VIDA ESPORTIVA</span>
+        <span>EXPLORE AS NOVIDADES ↓</span>
       </div>
       {destaque ? (
         <Hero product={{
